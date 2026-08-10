@@ -54,15 +54,17 @@ export type GigPackage = {
 };
 
 export const CATEGORIES = [
-  { slug: "website-development", label: "Website", sub: "Development" },
   { slug: "logo-design", label: "Logo", sub: "Design" },
-  { slug: "ui-ux-design", label: "UI/UX", sub: "Design" },
-  { slug: "content-writing", label: "Content", sub: "Writing" },
+  { slug: "motion-graphics", label: "Motion", sub: "Graphics" },
   { slug: "video-editing", label: "Video", sub: "Editing" },
-  { slug: "ai-services", label: "AI", sub: "Services" },
-  { slug: "mobile-app-development", label: "Mobile App", sub: "Development" },
-  { slug: "graphics-design", label: "Graphics", sub: "Design" },
+  { slug: "web-design", label: "Web", sub: "Design" },
+  { slug: "content-writing", label: "Content", sub: "Writing" },
+  { slug: "app-ui-design", label: "App UI", sub: "Design" },
+  { slug: "graphic-design", label: "Graphic", sub: "Design" },
+  { slug: "app-development", label: "App", sub: "Development" },
+  { slug: "web-development", label: "Web", sub: "Development" },
 ];
+
 
 export const gigsQuery = (opts: { category?: string; search?: string; limit?: number } = {}) => ({
   queryKey: ["gigs", opts.category ?? null, opts.search ?? null, opts.limit ?? 30],
@@ -182,4 +184,52 @@ export function timeAgo(iso: string | null | undefined) {
   const d = Math.floor(h / 24);
   if (d < 7) return `${d}d`;
   return new Date(iso).toLocaleDateString();
+}
+
+export type GigReview = {
+  id: string;
+  gig_id: string;
+  rating: number | null;
+  comment: string | null;
+  created_at: string;
+};
+
+export const gigMediaQuery = (gigId: string) => ({
+  queryKey: ["gig-media", gigId],
+  queryFn: async (): Promise<string[]> => {
+    const { data, error } = await supabase
+      .from("gig_media")
+      .select("file_url, file_type, created_at")
+      .eq("gig_id", gigId)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    return (data ?? [])
+      .filter((m) => !m.file_type || String(m.file_type).startsWith("image"))
+      .map((m) => m.file_url as string)
+      .filter(Boolean);
+  },
+});
+
+export const gigReviewsQuery = (gigId: string) => ({
+  queryKey: ["gig-reviews", gigId],
+  queryFn: async (): Promise<GigReview[]> => {
+    const { data, error } = await supabase
+      .from("public_gig_reviews")
+      .select("id, gig_id, rating, comment, created_at")
+      .eq("gig_id", gigId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as GigReview[];
+  },
+});
+
+/** All distinct images for a gig: thumbnail, images[] and gig_media rows, de-duplicated. */
+export function gigGallery(
+  gig: Pick<Gig, "images" | "thumbnail_url"> | null | undefined,
+  media: string[] | undefined,
+) {
+  const all = [gig?.thumbnail_url ?? null, ...(gig?.images ?? []), ...(media ?? [])].filter(
+    (u): u is string => Boolean(u),
+  );
+  return [...new Set(all)];
 }
