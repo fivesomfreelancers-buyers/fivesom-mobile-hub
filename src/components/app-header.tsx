@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Bell, Menu } from "lucide-react";
 
+import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfile } from "@/hooks/use-session";
 import { initials } from "@/lib/fivesom";
@@ -16,14 +18,13 @@ export function AppHeader({ title }: { title?: string }) {
           <span className="text-lg font-semibold">{title}</span>
         ) : (
           <Link to="/" className="flex items-center gap-2">
-            <span className="grid h-7 w-7 place-items-center rounded-lg bg-primary text-sm font-black text-primary-foreground">
-              5
-            </span>
+            <Logo className="h-8 w-8" />
             <span className="text-lg font-bold tracking-tight">FIVESOM</span>
           </Link>
         )}
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
         <Bell className="h-5 w-5 text-muted-foreground" />
         <Link to="/settings">
           <Avatar className="h-8 w-8">
