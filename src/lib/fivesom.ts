@@ -141,7 +141,7 @@ export const freelancerProfilesQuery = (freelancerIds: string[]) => ({
       profiles = (pr ?? []) as PublicProfile[];
     }
     const byUser = new Map(profiles.map((p) => [p.id, p]));
-    const map: Record<string, { freelancer: PublicFreelancer; profile?: PublicProfile }> = {};
+    const map: Record<string, { freelancer: PublicFreelancer; profile?: PublicProfile | undefined }> = {};
     for (const f of fl ?? []) {
       map[f.id as string] = {
         freelancer: f as unknown as PublicFreelancer,
