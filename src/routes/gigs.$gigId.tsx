@@ -1,6 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Check, Clock, RefreshCcw, Star } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  RefreshCcw,
+  Star,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -11,11 +19,14 @@ import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
 import {
   freelancerProfilesQuery,
-  gigImage,
+  gigGallery,
+  gigMediaQuery,
   gigPackagesQuery,
   gigQuery,
+  gigReviewsQuery,
   initials,
   money,
+  timeAgo,
 } from "@/lib/fivesom";
 
 export const Route = createFileRoute("/gigs/$gigId")({
@@ -44,15 +55,21 @@ export const Route = createFileRoute("/gigs/$gigId")({
   notFoundComponent: () => <div className="p-6 text-sm">Gig not found.</div>,
 });
 
+type TabKey = "description" | "requirements" | "reviews" | "seller";
+
 function GigDetails() {
   const { gigId } = Route.useParams();
   const navigate = useNavigate();
   const { user } = useSession();
   const gig = useQuery(gigQuery(gigId));
   const packages = useQuery(gigPackagesQuery(gigId));
+  const media = useQuery(gigMediaQuery(gigId));
+  const reviews = useQuery(gigReviewsQuery(gigId));
   const sellers = useQuery(freelancerProfilesQuery(gig.data ? [gig.data.freelancer_id] : []));
   const [selected, setSelected] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState<TabKey>("description");
+  const [slide, setSlide] = useState(0);
 
   useEffect(() => {
     if (!selected && packages.data?.length) setSelected(packages.data[0]!.id);
@@ -71,7 +88,15 @@ function GigDetails() {
 
   const seller = sellers.data?.[gig.data.freelancer_id];
   const pkg = packages.data?.find((p) => p.id === selected) ?? null;
-  const img = gigImage(gig.data);
+  const gallery = gigGallery(gig.data, media.data);
+  const current = gallery.length ? gallery[Math.min(slide, gallery.length - 1)] : null;
+  const reviewList = reviews.data ?? [];
+  const requirements = (gig.data as { buyer_requirements?: string | null }).buyer_requirements;
+
+  function step(dir: 1 | -1) {
+    if (gallery.length < 2) return;
+    setSlide((s) => (s + dir + gallery.length) % gallery.length);
+  }
 
   async function startOrder() {
     if (!user) {
@@ -136,6 +161,13 @@ function GigDetails() {
     }
   }
 
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: "description", label: "Description" },
+    { key: "requirements", label: "Requirements" },
+    { key: "reviews", label: `Reviews (${reviewList.length})` },
+    { key: "seller", label: "About Seller" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-md pb-10">
@@ -146,9 +178,62 @@ function GigDetails() {
           <span className="text-sm font-semibold">Gig Details</span>
         </div>
 
-        <div className="aspect-[4/3] w-full bg-muted">
-          {img ? <img src={img} alt={gig.data.title} className="h-full w-full object-cover" /> : null}
+        <div className="relative aspect-[4/3] w-full bg-muted">
+          {current ? (
+            <img
+              src={current}
+              alt={`${gig.data.title} — image ${slide + 1}`}
+              className="h-full w-full object-contain"
+            />
+          ) : null}
+          {gallery.length > 1 ? (
+            <>
+              <button
+                type="button"
+                onClick={() => step(-1)}
+                aria-label="Previous image"
+                className="absolute left-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-card/90 backdrop-blur"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => step(1)}
+                aria-label="Next image"
+                className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-card/90 backdrop-blur"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              <div className="absolute inset-x-0 bottom-2 flex justify-center gap-1.5">
+                {gallery.map((u, i) => (
+                  <span
+                    key={u}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === slide ? "w-4 bg-primary" : "w-1.5 bg-border"
+                    }`}
+                  />
+                ))}
+              </div>
+            </>
+          ) : null}
         </div>
+
+        {gallery.length > 1 ? (
+          <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pt-3">
+            {gallery.map((u, i) => (
+              <button
+                key={u}
+                type="button"
+                onClick={() => setSlide(i)}
+                className={`h-14 w-20 shrink-0 overflow-hidden rounded-lg border-2 ${
+                  i === slide ? "border-primary" : "border-border"
+                }`}
+              >
+                <img src={u} alt="" className="h-full w-full object-cover" loading="lazy" />
+              </button>
+            ))}
+          </div>
+        ) : null}
 
         <div className="space-y-5 px-4 pt-4">
           <div className="flex items-center gap-3">
@@ -167,6 +252,19 @@ function GigDetails() {
           </div>
 
           <h1 className="text-lg font-bold leading-snug">{gig.data.title}</h1>
+
+          {gig.data.tags?.length ? (
+            <div className="flex flex-wrap gap-2">
+              {gig.data.tags.map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] text-muted-foreground"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          ) : null}
 
           <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
@@ -238,14 +336,132 @@ function GigDetails() {
             </Button>
           </div>
 
-          <div>
-            <p className="mb-2 text-sm font-semibold">About This Gig</p>
-            <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-              {gig.data.description}
-            </p>
+          <div className="rounded-xl border border-border bg-card">
+            <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-border p-1">
+              {tabs.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setTab(t.key)}
+                  className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                    tab === t.key
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-4 text-sm">
+              {tab === "description" ? (
+                <p className="whitespace-pre-line leading-relaxed text-muted-foreground">
+                  {gig.data.description || "No description provided."}
+                </p>
+              ) : null}
+
+              {tab === "requirements" ? (
+                requirements ? (
+                  <p className="whitespace-pre-line leading-relaxed text-muted-foreground">
+                    {requirements}
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground">
+                    The seller will send the requirements after you place the order.
+                  </p>
+                )
+              ) : null}
+
+              {tab === "reviews" ? (
+                reviews.isLoading ? (
+                  <Skeleton className="h-16 w-full rounded-lg" />
+                ) : reviewList.length === 0 ? (
+                  <p className="text-muted-foreground">No reviews yet for this gig.</p>
+                ) : (
+                  <ul className="space-y-4">
+                    {reviewList.map((r) => (
+                      <li key={r.id} className="border-b border-border pb-3 last:border-0 last:pb-0">
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1 text-xs font-semibold">
+                            <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+                            {Number(r.rating ?? 0).toFixed(1)}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {timeAgo(r.created_at)}
+                          </span>
+                        </div>
+                        {r.comment ? (
+                          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                            {r.comment}
+                          </p>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                )
+              ) : null}
+
+              {tab === "seller" ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={seller?.profile?.profile_image_url ?? undefined} alt="" />
+                      <AvatarFallback>{initials(seller?.profile?.full_name)}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">
+                        {seller?.profile?.full_name ?? "Freelancer"}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {seller?.freelancer?.professional_title ??
+                          seller?.profile?.professional_title ??
+                          "Seller"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <Stat
+                      label="Rating"
+                      value={Number(seller?.freelancer?.rating ?? 0).toFixed(1)}
+                    />
+                    <Stat
+                      label="Orders"
+                      value={String(seller?.freelancer?.completed_orders ?? 0)}
+                    />
+                    <Stat
+                      label="Verified"
+                      value={seller?.freelancer?.is_verified ? "Yes" : "No"}
+                    />
+                  </div>
+                  <p className="whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
+                    {seller?.freelancer?.bio ??
+                      seller?.profile?.bio ??
+                      "This seller hasn't added a bio yet."}
+                  </p>
+                  {seller?.profile?.location ? (
+                    <p className="text-xs text-muted-foreground">
+                      Location: {seller.profile.location}
+                    </p>
+                  ) : null}
+                  <Button variant="outline" className="w-full" onClick={messageSeller}>
+                    Contact Seller
+                  </Button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border p-2">
+      <p className="text-sm font-bold">{value}</p>
+      <p className="text-[10px] text-muted-foreground">{label}</p>
     </div>
   );
 }
