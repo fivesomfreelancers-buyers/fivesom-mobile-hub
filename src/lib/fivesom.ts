@@ -54,15 +54,17 @@ export type GigPackage = {
 };
 
 export const CATEGORIES = [
-  { slug: "website-development", label: "Website", sub: "Development" },
   { slug: "logo-design", label: "Logo", sub: "Design" },
-  { slug: "ui-ux-design", label: "UI/UX", sub: "Design" },
-  { slug: "content-writing", label: "Content", sub: "Writing" },
+  { slug: "motion-graphics", label: "Motion", sub: "Graphics" },
   { slug: "video-editing", label: "Video", sub: "Editing" },
-  { slug: "ai-services", label: "AI", sub: "Services" },
-  { slug: "mobile-app-development", label: "Mobile App", sub: "Development" },
-  { slug: "graphics-design", label: "Graphics", sub: "Design" },
+  { slug: "web-design", label: "Web", sub: "Design" },
+  { slug: "content-writing", label: "Content", sub: "Writing" },
+  { slug: "app-ui-design", label: "App UI", sub: "Design" },
+  { slug: "graphic-design", label: "Graphic", sub: "Design" },
+  { slug: "app-development", label: "App", sub: "Development" },
+  { slug: "web-development", label: "Web", sub: "Development" },
 ];
+
 
 export const gigsQuery = (opts: { category?: string; search?: string; limit?: number } = {}) => ({
   queryKey: ["gigs", opts.category ?? null, opts.search ?? null, opts.limit ?? 30],
