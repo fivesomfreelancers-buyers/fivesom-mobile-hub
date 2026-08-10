@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as GigsGigIdRouteImport } from './routes/gigs.$gigId'
 import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authenticated/messages.index'
 import { Route as AuthenticatedMessagesConversationIdRouteImport } from './routes/_authenticated/messages.$conversationId'
@@ -34,6 +35,11 @@ const AuthRoute = AuthRouteImport.update({
 const AuthenticatedOrdersRoute = AuthenticatedOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const GigsGigIdRoute = GigsGigIdRouteImport.update({
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/orders': typeof AuthenticatedOrdersRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/messages/': typeof AuthenticatedMessagesIndexRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/orders': typeof AuthenticatedOrdersRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/messages': typeof AuthenticatedMessagesIndexRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/orders': typeof AuthenticatedOrdersRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
   '/_authenticated/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/orders'
+    | '/settings'
     | '/gigs/$gigId'
     | '/messages/$conversationId'
     | '/messages/'
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/orders'
+    | '/settings'
     | '/gigs/$gigId'
     | '/messages/$conversationId'
     | '/messages'
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/orders'
+    | '/_authenticated/settings'
     | '/gigs/$gigId'
     | '/_authenticated/messages/$conversationId'
     | '/_authenticated/messages/'
@@ -145,6 +157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrdersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/gigs/$gigId': {
       id: '/gigs/$gigId'
       path: '/gigs/$gigId'
@@ -171,12 +190,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedMessagesConversationIdRoute: typeof AuthenticatedMessagesConversationIdRoute
   AuthenticatedMessagesIndexRoute: typeof AuthenticatedMessagesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOrdersRoute: AuthenticatedOrdersRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedMessagesConversationIdRoute:
     AuthenticatedMessagesConversationIdRoute,
   AuthenticatedMessagesIndexRoute: AuthenticatedMessagesIndexRoute,
