@@ -41,13 +41,13 @@ function AuthPage() {
     if (!loading && user) navigate({ to: "/", replace: true });
   }, [user, loading, navigate]);
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     setBusy(true);
     if (mode === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setBusy(false);
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       navigate({ to: "/", replace: true });
     } else {
       const { data, error } = await supabase.auth.signUp({
@@ -59,7 +59,7 @@ function AuthPage() {
         },
       });
       setBusy(false);
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       if (!data.session) {
         toast.success("Check your email to confirm your account.");
       } else {
@@ -68,12 +68,12 @@ function AuthPage() {
     }
   }
 
-  async function forgot() {
-    if (!email) return toast.error("Enter your email first");
+  async function forgot(): Promise<void> {
+    if (!email) { toast.error("Enter your email first"); return; }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Password reset email sent");
   }
 
