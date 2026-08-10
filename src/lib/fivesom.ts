@@ -185,3 +185,51 @@ export function timeAgo(iso: string | null | undefined) {
   if (d < 7) return `${d}d`;
   return new Date(iso).toLocaleDateString();
 }
+
+export type GigReview = {
+  id: string;
+  gig_id: string;
+  rating: number | null;
+  comment: string | null;
+  created_at: string;
+};
+
+export const gigMediaQuery = (gigId: string) => ({
+  queryKey: ["gig-media", gigId],
+  queryFn: async (): Promise<string[]> => {
+    const { data, error } = await supabase
+      .from("gig_media")
+      .select("file_url, file_type, created_at")
+      .eq("gig_id", gigId)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    return (data ?? [])
+      .filter((m) => !m.file_type || String(m.file_type).startsWith("image"))
+      .map((m) => m.file_url as string)
+      .filter(Boolean);
+  },
+});
+
+export const gigReviewsQuery = (gigId: string) => ({
+  queryKey: ["gig-reviews", gigId],
+  queryFn: async (): Promise<GigReview[]> => {
+    const { data, error } = await supabase
+      .from("public_gig_reviews")
+      .select("id, gig_id, rating, comment, created_at")
+      .eq("gig_id", gigId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as GigReview[];
+  },
+});
+
+/** All distinct images for a gig: thumbnail, images[] and gig_media rows, de-duplicated. */
+export function gigGallery(
+  gig: Pick<Gig, "images" | "thumbnail_url"> | null | undefined,
+  media: string[] | undefined,
+) {
+  const all = [gig?.thumbnail_url ?? null, ...(gig?.images ?? []), ...(media ?? [])].filter(
+    (u): u is string => Boolean(u),
+  );
+  return [...new Set(all)];
+}
