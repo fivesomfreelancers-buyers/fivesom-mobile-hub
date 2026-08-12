@@ -9,11 +9,15 @@ import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL, makeOpaqueKeyFetch } from "./co
  */
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
+    // Session is written to localStorage and auto-refreshed, so users stay
+    // signed in across app restarts exactly like on the website.
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    flowType: "pkce",
     storage: typeof window === "undefined" ? undefined : window.localStorage,
     storageKey: "fivesom-auth",
   },
+
   global: { fetch: makeOpaqueKeyFetch(SUPABASE_PUBLISHABLE_KEY) },
 });
