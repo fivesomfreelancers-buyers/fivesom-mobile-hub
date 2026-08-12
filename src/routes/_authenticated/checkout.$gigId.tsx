@@ -1,11 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { CreditCard, Loader2, ShieldCheck } from "lucide-react";
+import { Building2, CreditCard, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { AppHeader } from "@/components/app-header";
 import { MobileShell } from "@/components/mobile-shell";
+import { StripeCardForm } from "@/components/stripe-card-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,9 +14,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
 import { gigPackagesQuery, gigQuery, money } from "@/lib/fivesom";
-import { createOrderCheckoutSession } from "@/lib/stripe.functions";
+import {
+  confirmOrderPayment,
+  createOrderPaymentIntent,
+  getStripePublishableKey,
+} from "@/lib/stripe.functions";
 
 type CheckoutSearch = { pkg?: string };
+
+/** Flat buyer service fee — $1 per order. */
+const BUYER_FEE = 1;
 
 export const Route = createFileRoute("/_authenticated/checkout/$gigId")({
   validateSearch: (raw: Record<string, unknown>): CheckoutSearch =>
@@ -45,64 +53,83 @@ function CheckoutPage() {
 
   const gig = useQuery(gigQuery(gigId));
   const packages = useQuery(gigPackagesQuery(gigId));
+  const stripeKey = useQuery({
+    queryKey: ["stripe-publishable-key"],
+    queryFn: () => getStripePublishableKey(),
+    staleTime: Infinity,
+  });
 
   const [method, setMethod] = useState<"card" | "manual">("card");
   const [proof, setProof] = useState<File | null>(null);
+  const [pay, setPay] = useState<{ orderId: string; clientSecret: string } | null>(null);
 
-  const selected =
-    packages.data?.find((p) => p.id === pkgId) ?? packages.data?.[0] ?? null;
-  const price = selected?.price ?? gig.data?.base_price ?? 0;
-  const serviceFee = Math.round(Number(price) * 0.05 * 100) / 100;
-  const total = Math.round((Number(price) + serviceFee) * 100) / 100;
+  const selected = packages.data?.find((p) => p.id === pkgId) ?? packages.data?.[0] ?? null;
+  const price = Number(selected?.price ?? gig.data?.base_price ?? 0);
+  const serviceFee = BUYER_FEE;
+  const total = Math.round((price + serviceFee) * 100) / 100;
 
-  const pay = useMutation({
+  async function createOrder(payment: "stripe" | "manual", proofUrl: string | null) {
+    if (!user || !gig.data) throw new Error("Missing session");
+    const { data: order, error } = await supabase
+      .from("orders")
+      .insert({
+        gig_id: gig.data.id,
+        buyer_id: user.id,
+        freelancer_id: gig.data.freelancer_id,
+        amount: total,
+        package_name: selected?.name ?? selected?.package_type ?? "basic",
+        status: "pending",
+        payment_method: payment,
+        payment_status: "pending",
+        ...(proofUrl ? { payment_proof_url: proofUrl } : {}),
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    return order.id as string;
+  }
+
+  /** Card: create the order, then a Stripe PaymentIntent, then reveal Stripe Elements. */
+  const startCard = useMutation({
     mutationFn: async () => {
-      if (!user || !gig.data) throw new Error("Missing session");
-
-      let proofUrl: string | null = null;
-      if (method === "manual") {
-        if (!proof) throw new Error("Upload your payment proof to continue");
-        const path = `${user.id}/${Date.now()}-${sanitize(proof.name)}`;
-        const up = await supabase.storage.from("order-requirements").upload(path, proof);
-        if (up.error) throw up.error;
-        proofUrl = up.data.path;
-      }
-
-      const { data: order, error } = await supabase
-        .from("orders")
-        .insert({
-          gig_id: gig.data.id,
-          buyer_id: user.id,
-          freelancer_id: gig.data.freelancer_id,
-          amount: total,
-          package_name: selected?.name ?? selected?.package_type ?? "basic",
-          status: "pending",
-          payment_method: method === "card" ? "stripe" : "manual",
-          payment_status: "pending",
-          ...(proofUrl ? { payment_proof_url: proofUrl } : {}),
-        })
-        .select("id")
-        .single();
-      if (error) throw error;
-      const orderId = order.id as string;
-
-      if (method === "manual") return { orderId, url: null as string | null };
-
-      const res = await createOrderCheckoutSession({
-        data: { orderId, origin: window.location.origin },
-      });
-      return { orderId, url: res.url };
+      const orderId = pay?.orderId ?? (await createOrder("stripe", null));
+      const res = await createOrderPaymentIntent({ data: { orderId } });
+      return { orderId, clientSecret: res.clientSecret };
     },
-    onSuccess: ({ orderId, url }) => {
-      if (url) {
-        window.location.href = url;
-        return;
-      }
-      toast.success("Order created — now send your requirements.");
+    onSuccess: setPay,
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  /** Manual/bank transfer: upload proof, create order pending verification. */
+  const submitManual = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Missing session");
+      if (!proof) throw new Error("Upload your payment proof to continue");
+      const path = `${user.id}/${Date.now()}-${sanitize(proof.name)}`;
+      const up = await supabase.storage.from("order-requirements").upload(path, proof);
+      if (up.error) throw up.error;
+      return createOrder("manual", up.data.path);
+    },
+    onSuccess: (orderId) => {
+      toast.success("Proof submitted — payment is pending verification.");
       navigate({ to: "/orders/$orderId/requirements", params: { orderId } });
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  async function handlePaid(paymentIntentId: string) {
+    if (!pay) return;
+    try {
+      const res = await confirmOrderPayment({
+        data: { orderId: pay.orderId, paymentIntentId },
+      });
+      if (!res.paid) throw new Error("Payment is still processing. Please refresh in a moment.");
+      toast.success("Payment successful — your order has been placed.");
+      navigate({ to: "/orders/$orderId/requirements", params: { orderId: pay.orderId } });
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
 
   if (gig.isLoading || packages.isLoading) {
     return (
@@ -123,6 +150,8 @@ function CheckoutPage() {
       </MobileShell>
     );
   }
+
+  const publishableKey = stripeKey.data?.publishableKey ?? null;
 
   return (
     <MobileShell>
@@ -154,7 +183,7 @@ function CheckoutPage() {
 
         <div className="space-y-2 rounded-xl border border-border bg-card p-4 text-sm">
           <Row label={selected?.name ?? "Package"} value={money(price)} />
-          <Row label="Buyer's service fee (5%)" value={money(serviceFee)} />
+          <Row label="Buyer's service fee" value={money(serviceFee)} />
           <div className="border-t border-border pt-2">
             <Row label="Total due now" value={money(total)} strong />
           </div>
@@ -162,73 +191,118 @@ function CheckoutPage() {
 
         <div className="space-y-3 rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-primary" />
+            {method === "card" ? (
+              <CreditCard className="h-5 w-5 text-primary" />
+            ) : (
+              <Building2 className="h-5 w-5 text-primary" />
+            )}
             <div>
-              <p className="text-base font-bold">Card Payment</p>
+              <p className="text-base font-bold">
+                {method === "card" ? "Card Payment" : "Bank Transfer"}
+              </p>
               <p className="text-[11px] text-muted-foreground">
-                Secure card payment powered by Stripe
+                {method === "card"
+                  ? "Secure card payment powered by Stripe"
+                  : "Transfer manually and upload your proof"}
               </p>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Payment method</Label>
-            {(
-              [
-                { key: "card", title: "Card via Stripe", sub: "Visa, Mastercard and more" },
-                { key: "manual", title: "Bank transfer / manual", sub: "Upload your payment proof" },
-              ] as const
-            ).map((m) => (
-              <button
-                key={m.key}
-                type="button"
-                onClick={() => setMethod(m.key)}
-                className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left ${
-                  method === m.key ? "border-primary bg-primary/5" : "border-border bg-card"
-                }`}
-              >
-                <span
-                  className={`mt-1 h-3.5 w-3.5 shrink-0 rounded-full border ${
-                    method === m.key ? "border-primary bg-primary" : "border-border"
+          {!pay ? (
+            <div className="space-y-2">
+              <Label>Payment method</Label>
+              {(
+                [
+                  { key: "card", title: "Card via Stripe", sub: "Visa, Mastercard and more" },
+                  { key: "manual", title: "Bank transfer / manual", sub: "Upload your payment proof" },
+                ] as const
+              ).map((m) => (
+                <button
+                  key={m.key}
+                  type="button"
+                  onClick={() => setMethod(m.key)}
+                  className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left ${
+                    method === m.key ? "border-primary bg-primary/5" : "border-border bg-card"
                   }`}
-                />
-                <span>
-                  <span className="block text-sm font-semibold">{m.title}</span>
-                  <span className="block text-[11px] text-muted-foreground">{m.sub}</span>
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {method === "manual" ? (
-            <div className="space-y-1.5">
-              <Label htmlFor="proof">Payment proof</Label>
-              <Input
-                id="proof"
-                type="file"
-                accept="image/*,application/pdf"
-                className="rounded-xl"
-                onChange={(e) => setProof(e.target.files?.[0] ?? null)}
-              />
+                >
+                  <span
+                    className={`mt-1 h-3.5 w-3.5 shrink-0 rounded-full border ${
+                      method === m.key ? "border-primary bg-primary" : "border-border"
+                    }`}
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold">{m.title}</span>
+                    <span className="block text-[11px] text-muted-foreground">{m.sub}</span>
+                  </span>
+                </button>
+              ))}
             </div>
           ) : null}
 
-          <Button
-            className="h-12 w-full rounded-xl text-base"
-            disabled={pay.isPending}
-            onClick={() => pay.mutate()}
-          >
-            {pay.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Continue — Pay {money(total)}
-          </Button>
+          {method === "card" && !pay ? (
+            <>
+              {publishableKey === null && !stripeKey.isLoading ? (
+                <p className="rounded-lg bg-destructive/10 p-2.5 text-[11px] font-medium text-destructive">
+                  Card payments are not configured yet. Add your Stripe keys to enable them.
+                </p>
+              ) : null}
+              <Button
+                className="h-12 w-full rounded-xl text-base"
+                disabled={startCard.isPending || !publishableKey}
+                onClick={() => startCard.mutate()}
+              >
+                {startCard.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Continue — Pay {money(total)}
+              </Button>
+            </>
+          ) : null}
 
-          <p className="text-center text-[11px] text-muted-foreground">
-            Card details are handled directly by Stripe. FIVESOM never stores them.
-          </p>
-          <p className="flex items-center justify-center gap-2 rounded-lg bg-success/10 p-2.5 text-[11px] font-medium text-success">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            PCI-compliant live payments handled by Stripe
-          </p>
+          {method === "card" && pay && publishableKey ? (
+            <StripeCardForm
+              publishableKey={publishableKey}
+              clientSecret={pay.clientSecret}
+              amountLabel={money(total)}
+              onPaid={handlePaid}
+            />
+          ) : null}
+
+          {method === "manual" ? (
+            <div className="space-y-3">
+              <div className="space-y-1 rounded-xl bg-muted/50 p-3 text-[12px]">
+                <p className="font-semibold">FIVESOM bank details</p>
+                <p className="text-muted-foreground">Bank: Premier Bank</p>
+                <p className="text-muted-foreground">Account name: FIVESOM Technologies</p>
+                <p className="text-muted-foreground">Account number: 0201-000-123456</p>
+                <p className="mt-1 font-medium">Amount to transfer: {money(total)}</p>
+                <p className="font-medium">
+                  Reference: FIVESOM-{gig.data.id.slice(0, 8).toUpperCase()}
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="proof">Payment proof (image or PDF)</Label>
+                <Input
+                  id="proof"
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="rounded-xl"
+                  onChange={(e) => setProof(e.target.files?.[0] ?? null)}
+                />
+              </div>
+
+              <Button
+                className="h-12 w-full rounded-xl text-base"
+                disabled={submitManual.isPending}
+                onClick={() => submitManual.mutate()}
+              >
+                {submitManual.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Submit payment proof
+              </Button>
+              <p className="text-center text-[11px] text-muted-foreground">
+                Your order will show “Pending verification” until an admin approves the transfer.
+              </p>
+            </div>
+          ) : null}
         </div>
       </div>
     </MobileShell>
