@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as GigsGigIdRouteImport } from './routes/gigs.$gigId'
@@ -50,6 +51,12 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOrdersRoute = AuthenticatedOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -84,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/favorites': typeof FavoritesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/orders': typeof AuthenticatedOrdersRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
@@ -96,6 +104,7 @@ export interface FileRoutesByTo {
   '/favorites': typeof FavoritesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/orders': typeof AuthenticatedOrdersRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
@@ -110,6 +119,7 @@ export interface FileRoutesById {
   '/favorites': typeof FavoritesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/orders': typeof AuthenticatedOrdersRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
@@ -124,6 +134,7 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/reset-password'
     | '/search'
+    | '/notifications'
     | '/orders'
     | '/settings'
     | '/gigs/$gigId'
@@ -136,6 +147,7 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/reset-password'
     | '/search'
+    | '/notifications'
     | '/orders'
     | '/settings'
     | '/gigs/$gigId'
@@ -149,6 +161,7 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/reset-password'
     | '/search'
+    | '/_authenticated/notifications'
     | '/_authenticated/orders'
     | '/_authenticated/settings'
     | '/gigs/$gigId'
@@ -210,6 +223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/orders': {
       id: '/_authenticated/orders'
       path: '/orders'
@@ -249,6 +269,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedMessagesConversationIdRoute: typeof AuthenticatedMessagesConversationIdRoute
@@ -256,6 +277,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedOrdersRoute: AuthenticatedOrdersRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedMessagesConversationIdRoute:
