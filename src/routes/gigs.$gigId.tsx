@@ -98,30 +98,19 @@ function GigDetails() {
     setSlide((s) => (s + dir + gallery.length) % gallery.length);
   }
 
-  async function startOrder() {
+  function startOrder() {
     if (!user) {
       navigate({ to: "/auth" });
       return;
     }
     if (!gig.data) return;
-    setBusy(true);
-    const { error } = await supabase.from("orders").insert({
-      gig_id: gig.data.id,
-      buyer_id: user.id,
-      freelancer_id: gig.data.freelancer_id,
-      amount: pkg?.price ?? gig.data.base_price,
-      package_name: pkg?.name ?? pkg?.package_type ?? "basic",
-      status: "pending",
-      payment_status: "pending",
+    navigate({
+      to: "/checkout/$gigId",
+      params: { gigId: gig.data.id },
+      search: pkg ? { pkg: pkg.id } : {},
     });
-    setBusy(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success("Order created");
-    navigate({ to: "/orders" });
   }
+
 
   async function messageSeller() {
     if (!user) {

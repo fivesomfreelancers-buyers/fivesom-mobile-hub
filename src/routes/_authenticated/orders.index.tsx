@@ -11,7 +11,7 @@ import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
 import { money, timeAgo } from "@/lib/fivesom";
 
-export const Route = createFileRoute("/_authenticated/orders")({
+export const Route = createFileRoute("/_authenticated/orders/")({
   head: () => ({
     meta: [
       { title: "Orders & Delivery — FIVESOM" },
@@ -167,7 +167,11 @@ function OrdersPage() {
           <ul className="space-y-3">
             {list.map((o) => (
               <li key={o.id} className="rounded-xl border border-border bg-card p-4">
-                <div className="flex items-start justify-between gap-3">
+                <Link
+                  to="/orders/$orderId"
+                  params={{ orderId: o.id }}
+                  className="flex items-start justify-between gap-3"
+                >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">
                       {(o.gig_id && gigTitles.data?.get(o.gig_id)) ?? "Custom order"}
@@ -179,7 +183,8 @@ function OrdersPage() {
                   <span className="shrink-0 text-sm font-bold text-success">
                     {money(o.amount)}
                   </span>
-                </div>
+                </Link>
+
 
                 <div className="mt-3 flex items-center gap-2">
                   <span
