@@ -25,6 +25,103 @@ export const getStripePublishableKey = createServerFn({ method: "GET" }).handler
   return { publishableKey: process.env['STRIPE_PUBLISHABLE_KEY'] ?? null };
 });
 
+/**
+ * Starts a checkout: verifies the buyer's access token, creates the pending
+ * order with the service role (the database blocks client-side card orders),
+ * then returns a Stripe PaymentIntent client secret for Stripe Elements.
+ */
+export const startGigCheckout = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        gigId: z.string().uuid(),
+        packageId: z.string().uuid().optional(),
+        accessToken: z.string().min(10),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const key = process.env['STRIPE_SECRET_KEY'];
+    if (!key) throw new Error("Stripe is not configured yet (STRIPE_SECRET_KEY missing).");
+
+    const { getServiceRoleClient } = await import("@/integrations/supabase/client.server");
+    const admin = getServiceRoleClient();
+
+    const { data: auth, error: authError } = await admin.auth.getUser(data.accessToken);
+    if (authError || !auth?.user) throw new Error("Please sign in again to continue.");
+    const buyerId = auth.user.id;
+
+    const { data: gig, error: gigError } = await admin
+      .from("gigs")
+      .select("id, title, freelancer_id, base_price")
+      .eq("id", data.gigId)
+      .maybeSingle();
+    if (gigError) throw gigError;
+    if (!gig) throw new Error("This gig is no longer available.");
+
+    let packageName = "basic";
+    let price = Number(gig['base_price'] ?? 0);
+    if (data.packageId) {
+      const { data: pkg } = await admin
+        .from("gig_packages")
+        .select("id, name, package_type, price")
+        .eq("id", data.packageId)
+        .eq("gig_id", data.gigId)
+        .maybeSingle();
+      if (pkg) {
+        price = Number(pkg['price'] ?? price);
+        packageName = String(pkg['name'] ?? pkg['package_type'] ?? "basic");
+      }
+    }
+
+    // Buyer's flat service fee — the amount is always computed server-side.
+    const total = Math.round((price + 1) * 100) / 100;
+    const amountCents = Math.round(total * 100);
+    if (amountCents < 50) throw new Error("Order amount is too low for card payment.");
+
+    const { data: order, error: orderError } = await admin
+      .from("orders")
+      .insert({
+        gig_id: gig['id'],
+        buyer_id: buyerId,
+        freelancer_id: gig['freelancer_id'],
+        amount: total,
+        package_name: packageName,
+        status: "pending",
+        payment_method: "stripe",
+        payment_status: "pending",
+      })
+      .select("id")
+      .single();
+    if (orderError) throw orderError;
+    const orderId = String(order['id']);
+
+    const intent = await stripeRequest("/payment_intents", key, {
+      amount: String(amountCents),
+      currency: "usd",
+      description: `${String(gig['title'] ?? "FIVESOM order")} — ${packageName}`.slice(0, 200),
+      "automatic_payment_methods[enabled]": "true",
+      "automatic_payment_methods[allow_redirects]": "never",
+      "metadata[order_id]": orderId,
+      "metadata[buyer_id]": buyerId,
+    });
+
+    await admin
+      .from("orders")
+      .update({ stripe_payment_intent_id: String(intent['id']) })
+      .eq("id", orderId);
+
+    return {
+      orderId,
+      clientSecret: String(intent['client_secret']),
+      amount: total,
+      packageName,
+      price,
+      fee: 1,
+    };
+  });
+
+
 /** Creates (or reuses) a PaymentIntent for a pending order — used by Stripe Elements. */
 export const createOrderPaymentIntent = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ orderId: z.string().uuid() }).parse(input))
