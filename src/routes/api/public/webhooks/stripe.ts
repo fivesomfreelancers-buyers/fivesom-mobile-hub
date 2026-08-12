@@ -85,6 +85,21 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
               ? String(object['id'])
               : null;
 
+        // Idempotency: Stripe retries and may deliver events out of order.
+        // Never re-apply the same status and never downgrade a settled payment.
+        const { data: current } = await admin
+          .from("orders")
+          .select("payment_status")
+          .eq("id", orderId)
+          .maybeSingle();
+        const currentStatus = (current?.['payment_status'] as string | undefined) ?? null;
+        if (!current) return new Response("ok (unknown order)", { status: 200 });
+        if (currentStatus === paymentStatus) return new Response("ok (duplicate)", { status: 200 });
+        const settled = ["paid", "refunded"];
+        if (settled.includes(currentStatus ?? "") && paymentStatus !== "refunded") {
+          return new Response("ok (already settled)", { status: 200 });
+        }
+
         await admin
           .from("orders")
           .update({
@@ -95,6 +110,7 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
           .eq("id", orderId);
 
         return new Response("ok", { status: 200 });
+
       },
     },
   },
