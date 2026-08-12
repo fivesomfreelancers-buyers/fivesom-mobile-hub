@@ -70,12 +70,23 @@ function AuthPage() {
   }
 
   async function google(): Promise<void> {
+    // Remember where the user was headed, then bounce through Google and land
+    // back on our own /auth/callback route (this URL must be in Supabase →
+    // Authentication → URL Configuration → Redirect URLs).
+    const next = new URLSearchParams(window.location.search).get("redirect");
+    if (next?.startsWith("/") && !next.startsWith("//")) {
+      window.sessionStorage.setItem("fivesom-auth-next", next);
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: { access_type: "offline", prompt: "select_account" },
+      },
     });
     if (error) toast.error(error.message);
   }
+
 
   async function forgot(): Promise<void> {
     if (!email) { toast.error("Enter your email first"); return; }

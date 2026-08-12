@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -19,6 +18,7 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as GigsGigIdRouteImport } from './routes/gigs.$gigId'
 import { Route as LegalPrivacyRouteImport } from './routes/legal/privacy'
@@ -36,11 +36,6 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FavoritesRoute = FavoritesRouteImport.update({
@@ -79,10 +74,15 @@ const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthIndexRoute = AuthIndexRouteImport.update({
+  id: '/auth/',
+  path: '/auth/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/callback',
-  path: '/callback',
-  getParentRoute: () => AuthRoute,
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const GigsGigIdRoute = GigsGigIdRouteImport.update({
   id: '/gigs/$gigId',
@@ -132,7 +132,6 @@ const AuthenticatedOrdersOrderIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRouteWithChildren
   '/favorites': typeof FavoritesRoute
   '/help': typeof HelpRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -144,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/gigs/$gigId': typeof GigsGigIdRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/auth/': typeof AuthIndexRoute
   '/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
@@ -152,7 +152,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRouteWithChildren
   '/favorites': typeof FavoritesRoute
   '/help': typeof HelpRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -164,6 +163,7 @@ export interface FileRoutesByTo {
   '/gigs/$gigId': typeof GigsGigIdRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/auth': typeof AuthIndexRoute
   '/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
@@ -174,7 +174,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRouteWithChildren
   '/favorites': typeof FavoritesRoute
   '/help': typeof HelpRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -186,6 +185,7 @@ export interface FileRoutesById {
   '/gigs/$gigId': typeof GigsGigIdRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/auth/': typeof AuthIndexRoute
   '/_authenticated/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
   '/_authenticated/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
@@ -196,7 +196,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/auth'
     | '/favorites'
     | '/help'
     | '/reset-password'
@@ -208,6 +207,7 @@ export interface FileRouteTypes {
     | '/gigs/$gigId'
     | '/legal/privacy'
     | '/legal/terms'
+    | '/auth/'
     | '/checkout/$gigId'
     | '/messages/$conversationId'
     | '/orders/$orderId'
@@ -216,7 +216,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/auth'
     | '/favorites'
     | '/help'
     | '/reset-password'
@@ -228,6 +227,7 @@ export interface FileRouteTypes {
     | '/gigs/$gigId'
     | '/legal/privacy'
     | '/legal/terms'
+    | '/auth'
     | '/checkout/$gigId'
     | '/messages/$conversationId'
     | '/orders/$orderId'
@@ -237,7 +237,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/auth'
     | '/favorites'
     | '/help'
     | '/reset-password'
@@ -249,6 +248,7 @@ export interface FileRouteTypes {
     | '/gigs/$gigId'
     | '/legal/privacy'
     | '/legal/terms'
+    | '/auth/'
     | '/_authenticated/checkout/$gigId'
     | '/_authenticated/messages/$conversationId'
     | '/_authenticated/orders/$orderId'
@@ -259,14 +259,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRouteWithChildren
   FavoritesRoute: typeof FavoritesRoute
   HelpRoute: typeof HelpRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   GigsGigIdRoute: typeof GigsGigIdRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
+  AuthIndexRoute: typeof AuthIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -283,13 +284,6 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/favorites': {
@@ -341,12 +335,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWalletRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/auth/': {
+      id: '/auth/'
+      path: '/auth'
+      fullPath: '/auth/'
+      preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/callback': {
       id: '/auth/callback'
-      path: '/callback'
+      path: '/auth/callback'
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof AuthRoute
+      parentRoute: typeof rootRouteImport
     }
     '/gigs/$gigId': {
       id: '/gigs/$gigId'
@@ -433,27 +434,18 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface AuthRouteChildren {
-  AuthCallbackRoute: typeof AuthCallbackRoute
-}
-
-const AuthRouteChildren: AuthRouteChildren = {
-  AuthCallbackRoute: AuthCallbackRoute,
-}
-
-const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRouteWithChildren,
   FavoritesRoute: FavoritesRoute,
   HelpRoute: HelpRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   GigsGigIdRoute: GigsGigIdRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,
+  AuthIndexRoute: AuthIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
