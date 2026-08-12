@@ -117,13 +117,15 @@ function CheckoutPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const publishableKey = stripeKey.data?.publishableKey ?? null;
+
   /**
    * Card is the default method, so prepare the PaymentIntent as soon as the
    * publishable key is available. Stripe Elements then renders inline with no
    * extra click and no blocking prompt.
-  const publishableKey = stripeKey.data?.publishableKey ?? null;
    */
   const started = useRef(false);
+
   useEffect(() => {
     if (method !== "card" || pay || !publishableKey || started.current) return;
     started.current = true;
