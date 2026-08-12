@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search, SlidersHorizontal, Star, BadgeCheck, Clock } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Search, SlidersHorizontal, Star } from "lucide-react";
 import { useState } from "react";
 
 import { AppHeader } from "@/components/app-header";
+import { GigCard } from "@/components/gig-card";
 import { MobileShell } from "@/components/mobile-shell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -12,11 +13,8 @@ import {
   CATEGORIES,
   freelancerProfilesQuery,
   freelancersQuery,
-  gigImage,
   gigsQuery,
   initials,
-  money,
-  type Gig,
 } from "@/lib/fivesom";
 
 export const Route = createFileRoute("/")({
@@ -41,6 +39,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string | null>(null);
 
@@ -60,7 +59,14 @@ function HomePage() {
       <AppHeader />
 
       <div className="space-y-6 px-4 pt-4">
-        <div className="flex items-center gap-2">
+        <form
+          className="flex items-center gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const q = search.trim();
+            navigate({ to: "/search", search: { ...(q ? { q } : {}), ...(category ? { category } : {}) } });
+          }}
+        >
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -70,10 +76,16 @@ function HomePage() {
               className="h-11 rounded-xl pl-9"
             />
           </div>
-          <button className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border bg-card">
+          <Link
+            to="/search"
+            search={category ? { category } : {}}
+            aria-label="Filters"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border bg-card"
+          >
             <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
-          </button>
-        </div>
+          </Link>
+        </form>
+
 
         <div className="rounded-2xl bg-primary p-5 text-primary-foreground">
           <h1 className="text-xl font-bold leading-snug">
@@ -205,54 +217,3 @@ function FreelancerCard({ freelancerId }: { freelancerId: string }) {
   );
 }
 
-function GigCard({
-  gig,
-  sellerName,
-  rating,
-}: {
-  gig: Gig;
-  sellerName: string | null;
-  rating: number | null;
-}) {
-  const img = gigImage(gig);
-  return (
-    <Link
-      to="/gigs/$gigId"
-      params={{ gigId: gig.id }}
-      className="overflow-hidden rounded-xl border border-border bg-card"
-    >
-      <div className="aspect-[4/3] w-full bg-muted">
-        {img ? (
-          <img src={img} alt={gig.title} loading="lazy" className="h-full w-full object-cover" />
-        ) : null}
-      </div>
-      <div className="space-y-1 p-2.5">
-        <p className="line-clamp-2 text-xs font-medium leading-snug">{gig.title}</p>
-        {sellerName ? (
-          <p className="truncate text-[10px] text-muted-foreground">{sellerName}</p>
-        ) : null}
-        <div className="flex items-center justify-between pt-1">
-          <span className="text-sm font-bold text-primary">{money(gig.base_price)}</span>
-          <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-            {rating ? (
-              <>
-                <Star className="h-3 w-3 fill-warning text-warning" />
-                {Number(rating).toFixed(1)}
-              </>
-            ) : (
-              <>
-                <Clock className="h-3 w-3" />
-                {gig.delivery_time_days ?? 3}d
-              </>
-            )}
-          </span>
-        </div>
-        {gig.is_vip ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold text-primary">
-            <BadgeCheck className="h-3 w-3" /> VIP
-          </span>
-        ) : null}
-      </div>
-    </Link>
-  );
-}

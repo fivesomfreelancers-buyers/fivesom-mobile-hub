@@ -66,8 +66,18 @@ export const CATEGORIES = [
 ];
 
 
-export const gigsQuery = (opts: { category?: string; search?: string; limit?: number } = {}) => ({
-  queryKey: ["gigs", opts.category ?? null, opts.search ?? null, opts.limit ?? 30],
+export type GigFilters = {
+  category?: string;
+  subcategory?: string;
+  search?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  maxDeliveryDays?: number;
+  limit?: number;
+};
+
+export const gigsQuery = (opts: GigFilters = {}) => ({
+  queryKey: ["gigs", opts],
   queryFn: async (): Promise<Gig[]> => {
     let q = supabase
       .from("gigs")
@@ -77,12 +87,53 @@ export const gigsQuery = (opts: { category?: string; search?: string; limit?: nu
       .order("created_at", { ascending: false })
       .limit(opts.limit ?? 30);
     if (opts.category) q = q.eq("category_slug", opts.category);
-    if (opts.search) q = q.ilike("title", `%${opts.search}%`);
+    if (opts.subcategory) q = q.eq("subcategory_slug", opts.subcategory);
+    if (typeof opts.minPrice === "number") q = q.gte("base_price", opts.minPrice);
+    if (typeof opts.maxPrice === "number") q = q.lte("base_price", opts.maxPrice);
+    if (typeof opts.maxDeliveryDays === "number")
+      q = q.lte("delivery_time_days", opts.maxDeliveryDays);
+    if (opts.search) {
+      const term = opts.search.replace(/[%,()]/g, " ").trim();
+      q = q.or(`title.ilike.%${term}%,description.ilike.%${term}%,tags.cs.{${term}}`);
+    }
     const { data, error } = await q;
     if (error) throw error;
     return (data ?? []) as Gig[];
   },
 });
+
+/** Gigs by explicit ids (used by Favorites). */
+export const gigsByIdsQuery = (ids: string[]) => ({
+  queryKey: ["gigs-by-ids", [...ids].sort()],
+  enabled: ids.length > 0,
+  queryFn: async (): Promise<Gig[]> => {
+    const { data, error } = await supabase
+      .from("gigs")
+      .select(
+        "id, freelancer_id, title, description, base_price, delivery_time_days, images, thumbnail_url, status, category_slug, subcategory_slug, tags, is_vip, created_at",
+      )
+      .in("id", ids);
+    if (error) throw error;
+    return (data ?? []) as Gig[];
+  },
+});
+
+/** Freelancer search over public profiles (name, username, title). */
+export const freelancerSearchQuery = (term: string) => ({
+  queryKey: ["freelancer-search", term],
+  enabled: term.trim().length > 1,
+  queryFn: async (): Promise<PublicProfile[]> => {
+    const t = term.replace(/[%,()]/g, " ").trim();
+    const { data, error } = await supabase
+      .from("public_profiles")
+      .select("id, full_name, username, profile_image_url, professional_title, bio, location, role, last_seen")
+      .or(`full_name.ilike.%${t}%,username.ilike.%${t}%,professional_title.ilike.%${t}%`)
+      .limit(12);
+    if (error) throw error;
+    return (data ?? []) as PublicProfile[];
+  },
+});
+
 
 export const gigQuery = (id: string) => ({
   queryKey: ["gig", id],
