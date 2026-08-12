@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search, SlidersHorizontal, Star, BadgeCheck, Clock } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Search, SlidersHorizontal, Star } from "lucide-react";
 import { useState } from "react";
 
 import { AppHeader } from "@/components/app-header";
+import { GigCard } from "@/components/gig-card";
 import { MobileShell } from "@/components/mobile-shell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -12,11 +13,8 @@ import {
   CATEGORIES,
   freelancerProfilesQuery,
   freelancersQuery,
-  gigImage,
   gigsQuery,
   initials,
-  money,
-  type Gig,
 } from "@/lib/fivesom";
 
 export const Route = createFileRoute("/")({
