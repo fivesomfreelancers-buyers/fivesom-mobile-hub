@@ -28,6 +28,7 @@ import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedMessagesConversationIdRouteImport } from './routes/_authenticated/messages.$conversationId'
 import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders.index'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
+import { Route as AuthenticatedOrdersOrderIdRequirementsRouteImport } from './routes/_authenticated/orders.$orderId.requirements'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -129,6 +130,12 @@ const AuthenticatedOrdersOrderIdRoute =
     path: '/orders/$orderId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOrdersOrderIdRequirementsRoute =
+  AuthenticatedOrdersOrderIdRequirementsRouteImport.update({
+    id: '/requirements',
+    path: '/requirements',
+    getParentRoute: () => AuthenticatedOrdersOrderIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -146,9 +153,10 @@ export interface FileRoutesByFullPath {
   '/auth/': typeof AuthIndexRoute
   '/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
-  '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRouteWithChildren
   '/messages/': typeof AuthenticatedMessagesIndexRoute
   '/orders/': typeof AuthenticatedOrdersIndexRoute
+  '/orders/$orderId/requirements': typeof AuthenticatedOrdersOrderIdRequirementsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -166,9 +174,10 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthIndexRoute
   '/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
-  '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRouteWithChildren
   '/messages': typeof AuthenticatedMessagesIndexRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
+  '/orders/$orderId/requirements': typeof AuthenticatedOrdersOrderIdRequirementsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -188,9 +197,10 @@ export interface FileRoutesById {
   '/auth/': typeof AuthIndexRoute
   '/_authenticated/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
   '/_authenticated/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
-  '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRouteWithChildren
   '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
   '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
+  '/_authenticated/orders/$orderId/requirements': typeof AuthenticatedOrdersOrderIdRequirementsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/messages/'
     | '/orders/'
+    | '/orders/$orderId/requirements'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/messages'
     | '/orders'
+    | '/orders/$orderId/requirements'
   id:
     | '__root__'
     | '/'
@@ -254,6 +266,7 @@ export interface FileRouteTypes {
     | '/_authenticated/orders/$orderId'
     | '/_authenticated/messages/'
     | '/_authenticated/orders/'
+    | '/_authenticated/orders/$orderId/requirements'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -405,8 +418,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrdersOrderIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/orders/$orderId/requirements': {
+      id: '/_authenticated/orders/$orderId/requirements'
+      path: '/requirements'
+      fullPath: '/orders/$orderId/requirements'
+      preLoaderRoute: typeof AuthenticatedOrdersOrderIdRequirementsRouteImport
+      parentRoute: typeof AuthenticatedOrdersOrderIdRoute
+    }
   }
 }
+
+interface AuthenticatedOrdersOrderIdRouteChildren {
+  AuthenticatedOrdersOrderIdRequirementsRoute: typeof AuthenticatedOrdersOrderIdRequirementsRoute
+}
+
+const AuthenticatedOrdersOrderIdRouteChildren: AuthenticatedOrdersOrderIdRouteChildren =
+  {
+    AuthenticatedOrdersOrderIdRequirementsRoute:
+      AuthenticatedOrdersOrderIdRequirementsRoute,
+  }
+
+const AuthenticatedOrdersOrderIdRouteWithChildren =
+  AuthenticatedOrdersOrderIdRoute._addFileChildren(
+    AuthenticatedOrdersOrderIdRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
@@ -414,7 +449,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedCheckoutGigIdRoute: typeof AuthenticatedCheckoutGigIdRoute
   AuthenticatedMessagesConversationIdRoute: typeof AuthenticatedMessagesConversationIdRoute
-  AuthenticatedOrdersOrderIdRoute: typeof AuthenticatedOrdersOrderIdRoute
+  AuthenticatedOrdersOrderIdRoute: typeof AuthenticatedOrdersOrderIdRouteWithChildren
   AuthenticatedMessagesIndexRoute: typeof AuthenticatedMessagesIndexRoute
   AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
 }
@@ -426,7 +461,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCheckoutGigIdRoute: AuthenticatedCheckoutGigIdRoute,
   AuthenticatedMessagesConversationIdRoute:
     AuthenticatedMessagesConversationIdRoute,
-  AuthenticatedOrdersOrderIdRoute: AuthenticatedOrdersOrderIdRoute,
+  AuthenticatedOrdersOrderIdRoute: AuthenticatedOrdersOrderIdRouteWithChildren,
   AuthenticatedMessagesIndexRoute: AuthenticatedMessagesIndexRoute,
   AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,
 }
