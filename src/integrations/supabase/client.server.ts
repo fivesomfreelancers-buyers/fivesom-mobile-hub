@@ -31,7 +31,7 @@ export function getServiceRoleClient(): SupabaseClient {
       fetch: (input, init) => {
         const headers = new Headers(init?.headers);
         headers.set("apikey", key);
-        headers.set("Authorization", `Bearer ${key}`);
+        if (!headers.has("Authorization")) headers.set("Authorization", `Bearer ${key}`);
         return fetch(input as RequestInfo, { ...init, headers });
       },
     },
