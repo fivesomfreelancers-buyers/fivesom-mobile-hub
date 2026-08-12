@@ -29,6 +29,7 @@ import { Route as AuthenticatedMessagesConversationIdRouteImport } from './route
 import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders.index'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
 import { Route as AuthenticatedOrdersOrderIdRequirementsRouteImport } from './routes/_authenticated/orders.$orderId.requirements'
+import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -136,6 +137,11 @@ const AuthenticatedOrdersOrderIdRequirementsRoute =
     path: '/requirements',
     getParentRoute: () => AuthenticatedOrdersOrderIdRoute,
   } as any)
+const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
+  id: '/api/public/webhooks/stripe',
+  path: '/api/public/webhooks/stripe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/messages/': typeof AuthenticatedMessagesIndexRoute
   '/orders/': typeof AuthenticatedOrdersIndexRoute
   '/orders/$orderId/requirements': typeof AuthenticatedOrdersOrderIdRequirementsRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/messages': typeof AuthenticatedMessagesIndexRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
   '/orders/$orderId/requirements': typeof AuthenticatedOrdersOrderIdRequirementsRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -201,6 +209,7 @@ export interface FileRoutesById {
   '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
   '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
   '/_authenticated/orders/$orderId/requirements': typeof AuthenticatedOrdersOrderIdRequirementsRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/messages/'
     | '/orders/'
     | '/orders/$orderId/requirements'
+    | '/api/public/webhooks/stripe'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/orders'
     | '/orders/$orderId/requirements'
+    | '/api/public/webhooks/stripe'
   id:
     | '__root__'
     | '/'
@@ -267,6 +278,7 @@ export interface FileRouteTypes {
     | '/_authenticated/messages/'
     | '/_authenticated/orders/'
     | '/_authenticated/orders/$orderId/requirements'
+    | '/api/public/webhooks/stripe'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -281,6 +293,7 @@ export interface RootRouteChildren {
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
   AuthIndexRoute: typeof AuthIndexRoute
+  ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -425,6 +438,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrdersOrderIdRequirementsRouteImport
       parentRoute: typeof AuthenticatedOrdersOrderIdRoute
     }
+    '/api/public/webhooks/stripe': {
+      id: '/api/public/webhooks/stripe'
+      path: '/api/public/webhooks/stripe'
+      fullPath: '/api/public/webhooks/stripe'
+      preLoaderRoute: typeof ApiPublicWebhooksStripeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -481,6 +501,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,
   AuthIndexRoute: AuthIndexRoute,
+  ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
