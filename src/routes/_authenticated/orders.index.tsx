@@ -11,7 +11,7 @@ import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
 import { money, timeAgo } from "@/lib/fivesom";
 
-export const Route = createFileRoute("/_authenticated/orders")({
+export const Route = createFileRoute("/_authenticated/orders/")({
   head: () => ({
     meta: [
       { title: "Orders & Delivery — FIVESOM" },
