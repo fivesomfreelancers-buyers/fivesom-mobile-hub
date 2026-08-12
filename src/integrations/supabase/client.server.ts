@@ -25,6 +25,16 @@ export function getServiceRoleClient(): SupabaseClient {
   if (!key) throw new Error("FIVESOM_SUPABASE_SERVICE_ROLE_KEY is not configured");
   return createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
-    global: { fetch: makeOpaqueKeyFetch(key) },
+    global: {
+      // PostgREST only resolves the service_role from the Authorization header,
+      // so (unlike publishable keys) this one must keep the bearer token.
+      fetch: (input, init) => {
+        const headers = new Headers(init?.headers);
+        headers.set("apikey", key);
+        if (!headers.has("Authorization")) headers.set("Authorization", `Bearer ${key}`);
+        return fetch(input as RequestInfo, { ...init, headers });
+      },
+    },
   });
 }
+
