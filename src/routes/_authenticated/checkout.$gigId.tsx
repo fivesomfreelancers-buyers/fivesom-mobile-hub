@@ -121,6 +121,7 @@ function CheckoutPage() {
    * Card is the default method, so prepare the PaymentIntent as soon as the
    * publishable key is available. Stripe Elements then renders inline with no
    * extra click and no blocking prompt.
+  const publishableKey = stripeKey.data?.publishableKey ?? null;
    */
   const started = useRef(false);
   useEffect(() => {
@@ -165,7 +166,6 @@ function CheckoutPage() {
     );
   }
 
-  const publishableKey = stripeKey.data?.publishableKey ?? null;
 
   return (
     <MobileShell>
