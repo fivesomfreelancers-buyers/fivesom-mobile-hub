@@ -80,9 +80,9 @@ const AuthIndexRoute = AuthIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/callback',
-  path: '/callback',
-  getParentRoute: () => AuthRoute,
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const GigsGigIdRoute = GigsGigIdRouteImport.update({
   id: '/gigs/$gigId',
@@ -263,6 +263,7 @@ export interface RootRouteChildren {
   HelpRoute: typeof HelpRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   GigsGigIdRoute: typeof GigsGigIdRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
@@ -343,10 +344,10 @@ declare module '@tanstack/react-router' {
     }
     '/auth/callback': {
       id: '/auth/callback'
-      path: '/callback'
+      path: '/auth/callback'
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof AuthRoute
+      parentRoute: typeof rootRouteImport
     }
     '/gigs/$gigId': {
       id: '/gigs/$gigId'
@@ -440,6 +441,7 @@ const rootRouteChildren: RootRouteChildren = {
   HelpRoute: HelpRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   GigsGigIdRoute: GigsGigIdRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,
