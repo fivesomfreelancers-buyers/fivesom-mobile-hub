@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Building2, CreditCard, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AppHeader } from "@/components/app-header";
@@ -117,6 +117,23 @@ function CheckoutPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const publishableKey = stripeKey.data?.publishableKey ?? null;
+
+  /**
+   * Card is the default method, so prepare the PaymentIntent as soon as the
+   * publishable key is available. Stripe Elements then renders inline with no
+   * extra click and no blocking prompt.
+   */
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (method !== "card" || pay || !publishableKey || started.current) return;
+    started.current = true;
+    startCard.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [method, pay, publishableKey]);
+
+
   async function handlePaid(paymentIntentId: string) {
     if (!pay) return;
     try {
@@ -151,7 +168,6 @@ function CheckoutPage() {
     );
   }
 
-  const publishableKey = stripeKey.data?.publishableKey ?? null;
 
   return (
     <MobileShell>
@@ -239,32 +255,34 @@ function CheckoutPage() {
             </div>
           ) : null}
 
-          {method === "card" && !pay ? (
-            <>
-              {publishableKey === null && !stripeKey.isLoading ? (
-                <p className="rounded-lg bg-destructive/10 p-2.5 text-[11px] font-medium text-destructive">
-                  Card payments are not configured yet. Add your Stripe keys to enable them.
+          {method === "card" ? (
+            publishableKey === null && !stripeKey.isLoading ? (
+              <p className="rounded-lg bg-destructive/10 p-2.5 text-[11px] font-medium text-destructive">
+                Card payments are not configured yet. Add your Stripe keys to enable them.
+              </p>
+            ) : pay && publishableKey ? (
+              <StripeCardForm
+                publishableKey={publishableKey}
+                clientSecret={pay.clientSecret}
+                amountLabel={money(total)}
+                onPaid={handlePaid}
+              />
+            ) : (
+              <div className="space-y-3">
+                <Skeleton className="h-11 rounded-xl" />
+                <Skeleton className="h-12 rounded-xl" />
+                <div className="grid grid-cols-2 gap-3">
+                  <Skeleton className="h-12 rounded-xl" />
+                  <Skeleton className="h-12 rounded-xl" />
+                </div>
+                <p className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Preparing secure card form…
                 </p>
-              ) : null}
-              <Button
-                className="h-12 w-full rounded-xl text-base"
-                disabled={startCard.isPending || !publishableKey}
-                onClick={() => startCard.mutate()}
-              >
-                {startCard.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Continue — Pay {money(total)}
-              </Button>
-            </>
+              </div>
+            )
           ) : null}
 
-          {method === "card" && pay && publishableKey ? (
-            <StripeCardForm
-              publishableKey={publishableKey}
-              clientSecret={pay.clientSecret}
-              amountLabel={money(total)}
-              onPaid={handlePaid}
-            />
-          ) : null}
 
           {method === "manual" ? (
             <div className="space-y-3">
