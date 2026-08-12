@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Building2, CreditCard, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AppHeader } from "@/components/app-header";
@@ -124,11 +124,11 @@ function CheckoutPage() {
    */
   const started = useRef(false);
   useEffect(() => {
-    if (method !== "card" || pay || !publishableKeyReady || started.current) return;
+    if (method !== "card" || pay || !publishableKey || started.current) return;
     started.current = true;
     startCard.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [method, pay, publishableKeyReady]);
+  }, [method, pay, publishableKey]);
 
 
   async function handlePaid(paymentIntentId: string) {
