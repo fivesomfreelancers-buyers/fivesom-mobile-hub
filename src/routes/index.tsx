@@ -39,6 +39,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string | null>(null);
 
