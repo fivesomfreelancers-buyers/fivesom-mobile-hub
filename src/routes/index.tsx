@@ -58,7 +58,14 @@ function HomePage() {
       <AppHeader />
 
       <div className="space-y-6 px-4 pt-4">
-        <div className="flex items-center gap-2">
+        <form
+          className="flex items-center gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const q = search.trim();
+            navigate({ to: "/search", search: { ...(q ? { q } : {}), ...(category ? { category } : {}) } });
+          }}
+        >
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -68,10 +75,16 @@ function HomePage() {
               className="h-11 rounded-xl pl-9"
             />
           </div>
-          <button className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border bg-card">
+          <Link
+            to="/search"
+            search={category ? { category } : {}}
+            aria-label="Filters"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border bg-card"
+          >
             <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
-          </button>
-        </div>
+          </Link>
+        </form>
+
 
         <div className="rounded-2xl bg-primary p-5 text-primary-foreground">
           <h1 className="text-xl font-bold leading-snug">
