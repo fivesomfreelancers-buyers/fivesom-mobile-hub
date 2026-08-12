@@ -6,7 +6,6 @@ import { Logo } from "@/components/logo";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/auth/callback")({
-  ssr: false,
   head: () => ({
     meta: [
       { title: "Signing you in — FIVESOM" },
