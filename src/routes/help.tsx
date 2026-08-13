@@ -1,5 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { LifeBuoy, Mail, MessageSquare } from "lucide-react";
+import { LifeBuoy, Mail, MessageSquare, Newspaper } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -18,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
+import { timeAgo } from "@/lib/fivesom";
 
 export const Route = createFileRoute("/help")({
   head: () => ({
@@ -174,5 +176,102 @@ function HelpPage() {
         </section>
       </div>
     </MobileShell>
+  );
+}
+
+/** Real support tickets for the signed-in user, with their live status. */
+function TicketHistory() {
+  const { user } = useSession();
+  const tickets = useQuery({
+    queryKey: ["support-tickets", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("support_tickets")
+        .select("id, subject, message, status, created_at")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return (data ?? []) as {
+        id: string;
+        subject: string | null;
+        message: string | null;
+        status: string | null;
+        created_at: string;
+      }[];
+    },
+  });
+
+  if (!user || (tickets.data ?? []).length === 0) return null;
+
+  return (
+    <section>
+      <h2 className="mb-2 text-sm font-semibold">Your support requests</h2>
+      <div className="space-y-2">
+        {(tickets.data ?? []).map((t) => (
+          <div key={t.id} className="rounded-xl border border-border bg-card p-3">
+            <div className="flex items-start justify-between gap-2">
+              <p className="min-w-0 flex-1 truncate text-sm font-semibold">
+                {t.subject ?? "Support request"}
+              </p>
+              <span className="shrink-0 rounded-full bg-accent-pink/15 px-2 py-0.5 text-[10px] font-semibold capitalize text-accent-pink">
+                {(t.status ?? "open").replace("_", " ")}
+              </span>
+            </div>
+            {t.message ? (
+              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{t.message}</p>
+            ) : null}
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Sent {timeAgo(t.created_at)} ago
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Platform news/announcements published from the FIVESOM backend.
+ * Renders nothing until announcements exist, so it never shows fake content.
+ */
+function NewsSection() {
+  const news = useQuery({
+    queryKey: ["platform-news"],
+    retry: false,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("news")
+        .select("id, title, body, created_at")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) return [];
+      return (data ?? []) as {
+        id: string;
+        title: string | null;
+        body: string | null;
+        created_at: string;
+      }[];
+    },
+  });
+
+  if ((news.data ?? []).length === 0) return null;
+
+  return (
+    <section id="news">
+      <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+        <Newspaper className="h-4 w-4 text-accent-pink" /> FIVESOM news
+      </h2>
+      <div className="space-y-2">
+        {(news.data ?? []).map((n) => (
+          <details key={n.id} className="rounded-xl border border-accent-pink/30 bg-card p-3">
+            <summary className="cursor-pointer text-sm font-semibold">{n.title}</summary>
+            <p className="mt-2 whitespace-pre-line text-xs text-muted-foreground">{n.body}</p>
+            <p className="mt-2 text-[10px] text-muted-foreground">{timeAgo(n.created_at)} ago</p>
+          </details>
+        ))}
+      </div>
+    </section>
   );
 }
