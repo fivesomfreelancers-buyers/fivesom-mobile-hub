@@ -1,17 +1,35 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, MessageSquare, ClipboardList, Settings } from "lucide-react";
+import {
+  Home,
+  MessageSquare,
+  ClipboardList,
+  Settings,
+  Wallet,
+  LayoutGrid,
+} from "lucide-react";
 
+import { useRole } from "@/hooks/use-role";
 import { cn } from "@/lib/utils";
 
-const items = [
+const BUYER_ITEMS = [
   { to: "/", label: "Home", icon: Home },
   { to: "/messages", label: "Message", icon: MessageSquare },
   { to: "/orders", label: "Orders", icon: ClipboardList },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
+const FREELANCER_ITEMS = [
+  { to: "/", label: "Home", icon: Home },
+  { to: "/gigs/manage", label: "My Gigs", icon: LayoutGrid },
+  { to: "/orders", label: "Sales", icon: ClipboardList },
+  { to: "/messages", label: "Message", icon: MessageSquare },
+  { to: "/wallet", label: "Earnings", icon: Wallet },
+] as const;
+
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { isFreelancer } = useRole();
+  const items = isFreelancer ? FREELANCER_ITEMS : BUYER_ITEMS;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
