@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { gigPackagesQuery, gigQuery, money } from "@/lib/fivesom";
 import {
-  confirmOrderPayment,
+  finalizeOrderPayment,
   getStripePublishableKey,
   startGigCheckout,
 } from "@/lib/stripe.functions";
