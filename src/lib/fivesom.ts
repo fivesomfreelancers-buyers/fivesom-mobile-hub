@@ -10,6 +10,9 @@ export type PublicProfile = {
   location: string | null;
   role: string | null;
   last_seen: string | null;
+  skills?: string[] | null;
+  languages?: string[] | null;
+  member_since?: string | null;
 };
 
 export type PublicFreelancer = {
@@ -22,6 +25,10 @@ export type PublicFreelancer = {
   is_verified: boolean | null;
   has_blue_tick: boolean | null;
   professional_title: string | null;
+  years_experience?: string | number | null;
+  education_level?: string | null;
+  software_tools?: string[] | null;
+  is_featured?: boolean | null;
 };
 
 export type Gig = {
@@ -126,7 +133,7 @@ export const freelancerSearchQuery = (term: string) => ({
     const t = term.replace(/[%,()]/g, " ").trim();
     const { data, error } = await supabase
       .from("public_profiles")
-      .select("id, full_name, username, profile_image_url, professional_title, bio, location, role, last_seen")
+      .select("id, full_name, username, profile_image_url, professional_title, bio, location, role, last_seen, skills, languages, member_since")
       .or(`full_name.ilike.%${t}%,username.ilike.%${t}%,professional_title.ilike.%${t}%`)
       .limit(12);
     if (error) throw error;
@@ -180,7 +187,7 @@ export const freelancerProfilesQuery = (freelancerIds: string[]) => ({
   queryFn: async () => {
     const { data: fl, error: e1 } = await supabase
       .from("public_freelancers")
-      .select("id, user_id, rating, completed_orders, is_verified, has_blue_tick, professional_title")
+      .select("id, user_id, bio, skills, rating, completed_orders, is_verified, has_blue_tick, professional_title, years_experience, education_level, software_tools, is_featured")
       .in("id", freelancerIds);
     if (e1) throw e1;
     const userIds = (fl ?? []).map((f) => f.user_id as string);
@@ -188,7 +195,7 @@ export const freelancerProfilesQuery = (freelancerIds: string[]) => ({
     if (userIds.length) {
       const { data: pr, error: e2 } = await supabase
         .from("public_profiles")
-        .select("id, full_name, username, profile_image_url, professional_title, bio, location, role, last_seen")
+        .select("id, full_name, username, profile_image_url, professional_title, bio, location, role, last_seen, skills, languages, member_since")
         .in("id", userIds);
       if (e2) throw e2;
       profiles = (pr ?? []) as PublicProfile[];
@@ -283,4 +290,39 @@ export function gigGallery(
     (u): u is string => Boolean(u),
   );
   return [...new Set(all)];
+}
+
+
+export type PortfolioItem = {
+  id: string;
+  freelancer_id: string;
+  media_url: string;
+  media_type: string | null;
+  position: number | null;
+};
+
+/** Public portfolio media for a freelancer (same as the website profile). */
+export const freelancerPortfolioQuery = (freelancerId: string | undefined) => ({
+  queryKey: ["freelancer-portfolio", freelancerId],
+  enabled: Boolean(freelancerId),
+  queryFn: async (): Promise<PortfolioItem[]> => {
+    const { data, error } = await supabase
+      .from("freelancer_portfolio")
+      .select("id, freelancer_id, media_url, media_type, position")
+      .eq("freelancer_id", freelancerId!)
+      .order("position", { ascending: true });
+    if (error) throw error;
+    return (data ?? []) as PortfolioItem[];
+  },
+});
+
+/** Seller counts as online when they were seen in the last 5 minutes. */
+export function isOnline(lastSeen: string | null | undefined) {
+  if (!lastSeen) return false;
+  return Date.now() - new Date(lastSeen).getTime() < 5 * 60 * 1000;
+}
+
+export function memberSince(date: string | null | undefined) {
+  if (!date) return null;
+  return new Date(date).toLocaleDateString(undefined, { month: "short", year: "numeric" });
 }

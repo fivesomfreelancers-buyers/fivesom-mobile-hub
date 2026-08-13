@@ -9,7 +9,7 @@ import {
   RefreshCcw,
   Star,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,7 +24,10 @@ import {
   gigPackagesQuery,
   gigQuery,
   gigReviewsQuery,
+  freelancerPortfolioQuery,
   initials,
+  isOnline,
+  memberSince,
   money,
   timeAgo,
 } from "@/lib/fivesom";
@@ -66,6 +69,7 @@ function GigDetails() {
   const media = useQuery(gigMediaQuery(gigId));
   const reviews = useQuery(gigReviewsQuery(gigId));
   const sellers = useQuery(freelancerProfilesQuery(gig.data ? [gig.data.freelancer_id] : []));
+  const portfolio = useQuery(freelancerPortfolioQuery(gig.data?.freelancer_id));
   const [selected, setSelected] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<TabKey>("description");
@@ -91,6 +95,10 @@ function GigDetails() {
   const gallery = gigGallery(gig.data, media.data);
   const current = gallery.length ? gallery[Math.min(slide, gallery.length - 1)] : null;
   const reviewList = reviews.data ?? [];
+  const sellerOnline = isOnline(seller?.profile?.last_seen);
+  const sellerSkills: unknown[] = seller?.freelancer?.skills ?? seller?.profile?.skills ?? [];
+  const sellerLanguages: unknown[] = seller?.profile?.languages ?? [];
+  const sellerTools: unknown[] = seller?.freelancer?.software_tools ?? [];
   const requirements = (gig.data as { buyer_requirements?: string | null }).buyer_requirements;
 
   function step(dir: 1 | -1) {
@@ -226,10 +234,22 @@ function GigDetails() {
 
         <div className="space-y-5 px-4 pt-4">
           <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={seller?.profile?.profile_image_url ?? undefined} alt="" />
-              <AvatarFallback>{initials(seller?.profile?.full_name)}</AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-10 w-10 border border-border">
+                <AvatarImage
+                  src={seller?.profile?.profile_image_url ?? undefined}
+                  alt={seller?.profile?.full_name ?? "Seller"}
+                />
+                <AvatarFallback>{initials(seller?.profile?.full_name)}</AvatarFallback>
+              </Avatar>
+              <span
+                aria-label={sellerOnline ? "Online" : "Offline"}
+                className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card ${
+                  sellerOnline ? "bg-success" : "bg-muted-foreground/50"
+                }`}
+              />
+            </div>
+
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">
                 {seller?.profile?.full_name ?? "Freelancer"}
@@ -392,52 +412,138 @@ function GigDetails() {
               ) : null}
 
               {tab === "seller" ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={seller?.profile?.profile_image_url ?? undefined} alt="" />
-                      <AvatarFallback>{initials(seller?.profile?.full_name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold">
-                        {seller?.profile?.full_name ?? "Freelancer"}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="relative shrink-0">
+                      <Avatar className="h-16 w-16 border border-border">
+                        <AvatarImage
+                          src={seller?.profile?.profile_image_url ?? undefined}
+                          alt={seller?.profile?.full_name ?? "Seller"}
+                        />
+                        <AvatarFallback>{initials(seller?.profile?.full_name)}</AvatarFallback>
+                      </Avatar>
+                      <span
+                        aria-label={sellerOnline ? "Online" : "Offline"}
+                        className={`absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2 border-card ${
+                          sellerOnline ? "bg-success" : "bg-muted-foreground/50"
+                        }`}
+                      />
+                    </div>
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold">
+                          {seller?.profile?.full_name ?? "Freelancer"}
+                        </p>
+                        {seller?.freelancer?.is_verified || seller?.freelancer?.has_blue_tick ? (
+                          <span className="rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-semibold text-warning">
+                            ★ Top Rated
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="text-xs font-medium text-primary">
                         {seller?.freelancer?.professional_title ??
                           seller?.profile?.professional_title ??
                           "Seller"}
                       </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {sellerOnline ? "Online now" : "Offline"}
+                        {memberSince(seller?.profile?.member_since)
+                          ? ` · Member since ${memberSince(seller?.profile?.member_since)}`
+                          : ""}
+                      </p>
+                      <p className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Star className="h-3 w-3 fill-warning text-warning" />
+                          {Number(seller?.freelancer?.rating ?? 0) > 0
+                            ? Number(seller?.freelancer?.rating).toFixed(1)
+                            : "New"}
+                        </span>
+                        <span>{seller?.freelancer?.completed_orders ?? 0} orders completed</span>
+                      </p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <Stat
-                      label="Rating"
-                      value={Number(seller?.freelancer?.rating ?? 0).toFixed(1)}
-                    />
-                    <Stat
-                      label="Orders"
-                      value={String(seller?.freelancer?.completed_orders ?? 0)}
-                    />
-                    <Stat
-                      label="Verified"
-                      value={seller?.freelancer?.is_verified ? "Yes" : "No"}
-                    />
-                  </div>
-                  <p className="whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
-                    {seller?.freelancer?.bio ??
-                      seller?.profile?.bio ??
-                      "This seller hasn't added a bio yet."}
-                  </p>
-                  {seller?.profile?.location ? (
-                    <p className="text-xs text-muted-foreground">
-                      Location: {seller.profile.location}
+
+                  <Section title="About">
+                    <p className="whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
+                      {seller?.freelancer?.bio ??
+                        seller?.profile?.bio ??
+                        "This seller hasn't added a bio yet."}
                     </p>
+                  </Section>
+
+                  {sellerSkills.length ? (
+                    <Section title="Skills">
+                      <Chips items={sellerSkills} />
+                    </Section>
                   ) : null}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {sellerLanguages.length ? (
+                      <Section title="Languages">
+                        <Chips items={sellerLanguages} />
+                      </Section>
+                    ) : null}
+                    {seller?.freelancer?.years_experience ? (
+                      <Section title="Experience">
+                        <p className="text-xs text-muted-foreground">
+                          {label(seller.freelancer.years_experience)}
+                        </p>
+                      </Section>
+                    ) : null}
+                  </div>
+
+                  {seller?.freelancer?.education_level ? (
+                    <Section title="Education">
+                      <p className="text-xs text-muted-foreground">
+                        {label(seller.freelancer.education_level)}
+                      </p>
+                    </Section>
+                  ) : null}
+
+                  {sellerTools.length ? (
+                    <Section title="Software & Tools">
+                      <Chips items={sellerTools} />
+                    </Section>
+                  ) : null}
+
+                  {seller?.profile?.location ? (
+                    <Section title="Location">
+                      <p className="text-xs text-muted-foreground">{seller.profile.location}</p>
+                    </Section>
+                  ) : null}
+
+                  {portfolio.data?.length ? (
+                    <Section title="Portfolio">
+                      <div className="grid grid-cols-2 gap-2">
+                        {portfolio.data.map((item) =>
+                          item.media_type?.startsWith("video") ? (
+                            <video
+                              key={item.id}
+                              src={item.media_url}
+                              controls
+                              playsInline
+                              className="aspect-[4/3] w-full rounded-lg border border-border object-cover"
+                            />
+                          ) : (
+                            <img
+                              key={item.id}
+                              src={item.media_url}
+                              alt="Portfolio work"
+                              loading="lazy"
+                              className="aspect-[4/3] w-full rounded-lg border border-border object-cover"
+                            />
+                          ),
+                        )}
+                      </div>
+                    </Section>
+                  ) : null}
+
                   <Button variant="outline" className="w-full" onClick={messageSeller}>
                     Contact Seller
                   </Button>
                 </div>
               ) : null}
+
             </div>
           </div>
         </div>
@@ -446,11 +552,37 @@ function GigDetails() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="rounded-lg border border-border p-2">
-      <p className="text-sm font-bold">{value}</p>
-      <p className="text-[10px] text-muted-foreground">{label}</p>
+    <div className="space-y-1.5">
+      <p className="text-xs font-semibold">{title}</p>
+      {children}
+    </div>
+  );
+}
+
+/** Values can arrive as plain strings or as `{ name, slug }` rows. */
+function label(item: unknown): string {
+  if (typeof item === "string") return item;
+  if (item && typeof item === "object") {
+    const o = item as Record<string, unknown>;
+    return String(o['name'] ?? o['label'] ?? o['title'] ?? o['slug'] ?? "");
+  }
+  return String(item ?? "");
+}
+
+function Chips({ items }: { items: unknown[] }) {
+  const values = Array.from(new Set(items.map(label).filter(Boolean)));
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {values.map((i) => (
+        <span
+          key={i}
+          className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px]"
+        >
+          {i}
+        </span>
+      ))}
     </div>
   );
 }
