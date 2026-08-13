@@ -14,7 +14,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
-import { confirmOrderPayment } from "@/lib/stripe.functions";
 
 type Search = { session_id?: string };
 
@@ -76,27 +75,21 @@ function RequirementsPage() {
     },
   });
 
+  // Payment is verified server-side before the order row exists, so here we
+  // only need the row to actually be paid.
   useEffect(() => {
     if (!sessionId) return;
-    let active = true;
-    confirmOrderPayment({ data: { orderId, sessionId } })
-      .then((r) => {
-        if (!active) return;
-        if (r.paid) toast.success("Payment received — now send your requirements.");
-        else toast.error("Payment not confirmed yet.");
-        void order.refetch();
-      })
-      .catch((e: Error) => toast.error(e.message))
-      .finally(() => active && setConfirming(false));
-    return () => {
-      active = false;
-    };
+    void order.refetch();
+    setConfirming(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, orderId]);
 
   const submit = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Missing session");
+      if (order.data?.['payment_status'] !== "paid") {
+        throw new Error("This order is not paid yet.");
+      }
       const parsed = schema.safeParse({ instructions, links });
       if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "Invalid input");
 
