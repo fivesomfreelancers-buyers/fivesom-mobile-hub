@@ -83,7 +83,12 @@ function OrdersPage() {
           .eq("user_id", user!.id)
           .maybeSingle();
         if (!fl?.id) return [];
-        query = query.eq("freelancer_id", fl.id as string);
+        // Freelancers only ever see genuinely paid orders whose buyer has
+        // already submitted requirements — never a half-finished checkout.
+        query = query
+          .eq("freelancer_id", fl.id as string)
+          .eq("payment_status", "paid")
+          .not("requirements", "is", null);
       }
       const { data, error } = await query;
       if (error) throw error;
