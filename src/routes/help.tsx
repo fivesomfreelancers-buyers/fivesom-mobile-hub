@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LifeBuoy, Mail, MessageSquare, Newspaper } from "lucide-react";
 import { useState } from "react";
@@ -64,6 +64,7 @@ function HelpPage() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const qc = useQueryClient();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -89,6 +90,7 @@ function HelpPage() {
     }
     setSubject("");
     setMessage("");
+    void qc.invalidateQueries({ queryKey: ["support-tickets"] });
     toast.success("Support ticket sent — we'll reply by email.");
   }
 
