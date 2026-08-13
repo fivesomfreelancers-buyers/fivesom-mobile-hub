@@ -55,7 +55,11 @@ export type FivesomProfile = {
   member_since: string | null;
 };
 
-/** Current user's own profile row (RLS: own row readable). */
+/**
+ * Current user's own profile row.
+ * `email` is not readable through the Data API (column privilege denied), so
+ * it comes from the auth session instead — same address the website uses.
+ */
 export function useProfile() {
   const { user } = useSession();
   return useQuery({
@@ -65,17 +69,22 @@ export function useProfile() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id, full_name, username, email, profile_image_url, bio, professional_title, location, role, skills, languages, member_since",
+          "id, full_name, username, profile_image_url, bio, professional_title, location, role, skills, languages, member_since",
         )
         .eq("id", user!.id)
         .maybeSingle();
       if (error) throw error;
-      return data as FivesomProfile | null;
+      if (!data) return null;
+      return { ...(data as Omit<FivesomProfile, "email">), email: user?.email ?? null };
     },
   });
 }
 
-/** Freelancer row for the current user, when they have one. */
+/**
+ * Freelancer row for the current user, when they have one.
+ * Read through the `public_freelancers` view: the base table blocks `select *`
+ * on the anon/authenticated role, while the view exposes every public field.
+ */
 export function useFreelancer() {
   const { user } = useSession();
   return useQuery({
@@ -83,7 +92,7 @@ export function useFreelancer() {
     enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("freelancers")
+        .from("public_freelancers")
         .select("*")
         .eq("user_id", user!.id)
         .maybeSingle();
@@ -92,3 +101,4 @@ export function useFreelancer() {
     },
   });
 }
+
