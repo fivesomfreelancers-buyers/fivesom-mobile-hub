@@ -24,7 +24,10 @@ import {
   gigPackagesQuery,
   gigQuery,
   gigReviewsQuery,
+  freelancerPortfolioQuery,
   initials,
+  isOnline,
+  memberSince,
   money,
   timeAgo,
 } from "@/lib/fivesom";
@@ -66,6 +69,7 @@ function GigDetails() {
   const media = useQuery(gigMediaQuery(gigId));
   const reviews = useQuery(gigReviewsQuery(gigId));
   const sellers = useQuery(freelancerProfilesQuery(gig.data ? [gig.data.freelancer_id] : []));
+  const portfolio = useQuery(freelancerPortfolioQuery(gig.data?.freelancer_id));
   const [selected, setSelected] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<TabKey>("description");
@@ -91,6 +95,10 @@ function GigDetails() {
   const gallery = gigGallery(gig.data, media.data);
   const current = gallery.length ? gallery[Math.min(slide, gallery.length - 1)] : null;
   const reviewList = reviews.data ?? [];
+  const sellerOnline = isOnline(seller?.profile?.last_seen);
+  const sellerSkills = seller?.freelancer?.skills ?? seller?.profile?.skills ?? [];
+  const sellerLanguages = seller?.profile?.languages ?? [];
+  const sellerTools = seller?.freelancer?.software_tools ?? [];
   const requirements = (gig.data as { buyer_requirements?: string | null }).buyer_requirements;
 
   function step(dir: 1 | -1) {
@@ -528,6 +536,30 @@ function GigDetails() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-xs font-semibold">{title}</p>
+      {children}
+    </div>
+  );
+}
+
+function Chips({ items }: { items: string[] }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {items.map((i) => (
+        <span
+          key={i}
+          className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px]"
+        >
+          {i}
+        </span>
+      ))}
     </div>
   );
 }
