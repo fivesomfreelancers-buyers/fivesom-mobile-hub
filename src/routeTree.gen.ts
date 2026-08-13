@@ -24,6 +24,7 @@ import { Route as GigsGigIdRouteImport } from './routes/gigs.$gigId'
 import { Route as LegalPrivacyRouteImport } from './routes/legal/privacy'
 import { Route as LegalTermsRouteImport } from './routes/legal/terms'
 import { Route as AuthenticatedCheckoutGigIdRouteImport } from './routes/_authenticated/checkout.$gigId'
+import { Route as AuthenticatedGigsManageRouteImport } from './routes/_authenticated/gigs.manage'
 import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authenticated/messages.index'
 import { Route as AuthenticatedMessagesConversationIdRouteImport } from './routes/_authenticated/messages.$conversationId'
 import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders.index'
@@ -107,6 +108,11 @@ const AuthenticatedCheckoutGigIdRoute =
     path: '/checkout/$gigId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedGigsManageRoute = AuthenticatedGigsManageRouteImport.update({
+  id: '/gigs/manage',
+  path: '/gigs/manage',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMessagesIndexRoute =
   AuthenticatedMessagesIndexRouteImport.update({
     id: '/messages/',
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/legal/terms': typeof LegalTermsRoute
   '/auth/': typeof AuthIndexRoute
   '/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
+  '/gigs/manage': typeof AuthenticatedGigsManageRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRouteWithChildren
   '/messages/': typeof AuthenticatedMessagesIndexRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/legal/terms': typeof LegalTermsRoute
   '/auth': typeof AuthIndexRoute
   '/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
+  '/gigs/manage': typeof AuthenticatedGigsManageRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRouteWithChildren
   '/messages': typeof AuthenticatedMessagesIndexRoute
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/legal/terms': typeof LegalTermsRoute
   '/auth/': typeof AuthIndexRoute
   '/_authenticated/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
+  '/_authenticated/gigs/manage': typeof AuthenticatedGigsManageRoute
   '/_authenticated/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRouteWithChildren
   '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/auth/'
     | '/checkout/$gigId'
+    | '/gigs/manage'
     | '/messages/$conversationId'
     | '/orders/$orderId'
     | '/messages/'
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/auth'
     | '/checkout/$gigId'
+    | '/gigs/manage'
     | '/messages/$conversationId'
     | '/orders/$orderId'
     | '/messages'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/auth/'
     | '/_authenticated/checkout/$gigId'
+    | '/_authenticated/gigs/manage'
     | '/_authenticated/messages/$conversationId'
     | '/_authenticated/orders/$orderId'
     | '/_authenticated/messages/'
@@ -403,6 +415,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCheckoutGigIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/gigs/manage': {
+      id: '/_authenticated/gigs/manage'
+      path: '/gigs/manage'
+      fullPath: '/gigs/manage'
+      preLoaderRoute: typeof AuthenticatedGigsManageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/messages/': {
       id: '/_authenticated/messages/'
       path: '/messages'
@@ -468,6 +487,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedCheckoutGigIdRoute: typeof AuthenticatedCheckoutGigIdRoute
+  AuthenticatedGigsManageRoute: typeof AuthenticatedGigsManageRoute
   AuthenticatedMessagesConversationIdRoute: typeof AuthenticatedMessagesConversationIdRoute
   AuthenticatedOrdersOrderIdRoute: typeof AuthenticatedOrdersOrderIdRouteWithChildren
   AuthenticatedMessagesIndexRoute: typeof AuthenticatedMessagesIndexRoute
@@ -479,6 +499,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedCheckoutGigIdRoute: AuthenticatedCheckoutGigIdRoute,
+  AuthenticatedGigsManageRoute: AuthenticatedGigsManageRoute,
   AuthenticatedMessagesConversationIdRoute:
     AuthenticatedMessagesConversationIdRoute,
   AuthenticatedOrdersOrderIdRoute: AuthenticatedOrdersOrderIdRouteWithChildren,
