@@ -58,15 +58,9 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
           data: { object: Record<string, unknown> };
         };
         const object = event.data.object;
-        const metadata = (object['metadata'] as { order_id?: string } | null) ?? null;
-        const orderId =
-          metadata?.order_id ??
-          (typeof object['client_reference_id'] === "string" ? object['client_reference_id'] : undefined);
-        if (!orderId) return new Response("ok (no order)", { status: 200 });
 
         const statusByEvent: Record<string, string> = {
           "payment_intent.succeeded": "paid",
-          "checkout.session.completed": "paid",
           "payment_intent.processing": "processing",
           "payment_intent.payment_failed": "failed",
           "payment_intent.canceled": "cancelled",
@@ -75,28 +69,33 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
         const paymentStatus = statusByEvent[event.type];
         if (!paymentStatus) return new Response("ok (ignored)", { status: 200 });
 
-        const { getServiceRoleClient } = await import("@/integrations/supabase/client.server");
-        const admin = getServiceRoleClient();
-
         const intentId =
           typeof object['payment_intent'] === "string"
             ? object['payment_intent']
             : typeof object['id'] === "string" && String(object['id']).startsWith("pi_")
               ? String(object['id'])
               : null;
+        if (!intentId) return new Response("ok (no intent)", { status: 200 });
 
-        // Idempotency: Stripe retries and may deliver events out of order.
-        // Never re-apply the same status and never downgrade a settled payment.
-        const { data: current } = await admin
-          .from("orders")
-          .select("payment_status")
-          .eq("id", orderId)
-          .maybeSingle();
-        const currentStatus = (current?.['payment_status'] as string | undefined) ?? null;
-        if (!current) return new Response("ok (unknown order)", { status: 200 });
+        const { getServiceRoleClient } = await import("@/integrations/supabase/client.server");
+        const admin = getServiceRoleClient();
+        const { createPaidOrderFromIntent, findOrderByIntent } = await import("@/lib/orders.server");
+
+        // Only a genuinely succeeded payment may bring an order into existence.
+        if (paymentStatus === "paid") {
+          const intent = String(object['id']).startsWith("pi_")
+            ? object
+            : { ...object, id: intentId, status: "succeeded" };
+          await createPaidOrderFromIntent(admin, { ...intent, status: "succeeded" });
+          return new Response("ok", { status: 200 });
+        }
+
+        // Failed / cancelled / processing / refunded: never create anything.
+        const current = await findOrderByIntent(admin, intentId);
+        if (!current) return new Response("ok (no order)", { status: 200 });
+        const currentStatus = (current['payment_status'] as string | undefined) ?? null;
         if (currentStatus === paymentStatus) return new Response("ok (duplicate)", { status: 200 });
-        const settled = ["paid", "refunded"];
-        if (settled.includes(currentStatus ?? "") && paymentStatus !== "refunded") {
+        if (currentStatus === "paid" && paymentStatus !== "refunded") {
           return new Response("ok (already settled)", { status: 200 });
         }
 
@@ -104,10 +103,9 @@ export const Route = createFileRoute("/api/public/webhooks/stripe")({
           .from("orders")
           .update({
             payment_status: paymentStatus,
-            payment_method: "stripe",
-            ...(intentId ? { stripe_payment_intent_id: intentId } : {}),
+            ...(paymentStatus === "refunded" ? { status: "cancelled" } : {}),
           })
-          .eq("id", orderId);
+          .eq("id", current['id']);
 
         return new Response("ok", { status: 200 });
 

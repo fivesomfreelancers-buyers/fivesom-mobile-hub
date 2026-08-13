@@ -52,8 +52,12 @@ function NotificationsPage() {
 
       const { data: orders } = await supabase
         .from("orders")
-        .select("id, status, amount, package_name, created_at, updated_at, buyer_id, freelancer_id")
+        .select(
+          "id, status, amount, package_name, created_at, updated_at, buyer_id, freelancer_id, payment_status, requirements",
+        )
         .or(filters.join(","))
+        // Only verified, paid orders are ever announced.
+        .eq("payment_status", "paid")
         .order("updated_at", { ascending: false })
         .limit(20);
 
@@ -65,7 +69,10 @@ function NotificationsPage() {
         .order("created_at", { ascending: false })
         .limit(20);
 
-      const orderItems: Item[] = (orders ?? []).map((o) => ({
+      const orderItems: Item[] = (orders ?? [])
+        // Sellers are notified only once the buyer has sent requirements.
+        .filter((o) => o.buyer_id === user!.id || o.requirements)
+        .map((o) => ({
         id: `order-${o.id as string}`,
         kind: "order" as const,
         title:

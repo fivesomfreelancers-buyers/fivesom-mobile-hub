@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { gigPackagesQuery, gigQuery, money } from "@/lib/fivesom";
 import {
-  confirmOrderPayment,
+  finalizeOrderPayment,
   getStripePublishableKey,
   startGigCheckout,
 } from "@/lib/stripe.functions";
@@ -78,14 +78,21 @@ function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [publishableKey, gig.data]);
 
+  /**
+   * The order is created only here, after the server has re-checked the
+   * PaymentIntent with Stripe. Nothing reaches the freelancer before this.
+   */
   async function handlePaid(paymentIntentId: string) {
-    const orderId = start.data?.orderId;
-    if (!orderId) return;
     try {
-      const res = await confirmOrderPayment({ data: { orderId, paymentIntentId } });
-      if (!res.paid) throw new Error("Payment is still processing. Please refresh in a moment.");
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("Please sign in again to continue.");
+      const res = await finalizeOrderPayment({ data: { paymentIntentId, accessToken } });
+      if (!res.paid || !res.orderId) {
+        throw new Error("Payment is still processing. Please refresh in a moment.");
+      }
       toast.success("Payment successful — your order has been placed.");
-      navigate({ to: "/orders/$orderId/requirements", params: { orderId } });
+      navigate({ to: "/orders/$orderId/requirements", params: { orderId: res.orderId } });
     } catch (e) {
       toast.error((e as Error).message);
     }
