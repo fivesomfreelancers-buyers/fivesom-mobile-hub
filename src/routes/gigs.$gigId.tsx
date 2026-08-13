@@ -234,10 +234,22 @@ function GigDetails() {
 
         <div className="space-y-5 px-4 pt-4">
           <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={seller?.profile?.profile_image_url ?? undefined} alt="" />
-              <AvatarFallback>{initials(seller?.profile?.full_name)}</AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-10 w-10 border border-border">
+                <AvatarImage
+                  src={seller?.profile?.profile_image_url ?? undefined}
+                  alt={seller?.profile?.full_name ?? "Seller"}
+                />
+                <AvatarFallback>{initials(seller?.profile?.full_name)}</AvatarFallback>
+              </Avatar>
+              <span
+                aria-label={sellerOnline ? "Online" : "Offline"}
+                className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card ${
+                  sellerOnline ? "bg-success" : "bg-muted-foreground/50"
+                }`}
+              />
+            </div>
+
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">
                 {seller?.profile?.full_name ?? "Freelancer"}
