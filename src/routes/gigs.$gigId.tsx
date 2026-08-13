@@ -9,7 +9,7 @@ import {
   RefreshCcw,
   Star,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -540,7 +540,7 @@ function GigDetails() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="space-y-1.5">
       <p className="text-xs font-semibold">{title}</p>
@@ -560,15 +560,6 @@ function Chips({ items }: { items: string[] }) {
           {i}
         </span>
       ))}
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-border p-2">
-      <p className="text-sm font-bold">{value}</p>
-      <p className="text-[10px] text-muted-foreground">{label}</p>
     </div>
   );
 }
