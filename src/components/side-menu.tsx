@@ -7,46 +7,81 @@ import {
   Heart,
   HelpCircle,
   Home,
+  LayoutGrid,
   LifeBuoy,
   ClipboardList,
   LogOut,
   MessageSquare,
   Menu,
+  Newspaper,
   Settings,
   Shield,
   User,
   Wallet,
   FileText,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 
 import { Logo } from "@/components/logo";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useRole } from "@/hooks/use-role";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
 
-const LINKS = [
+type MenuLink = {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  search?: Record<string, string>;
+  /** Support & News use the pink accent so they stand out from the blue brand. */
+  pink?: boolean;
+};
+
+const COMMON_TOP: MenuLink[] = [
   { to: "/", label: "Home", icon: Home },
   { to: "/search", label: "Explore", icon: Compass },
   { to: "/search", label: "Categories", icon: Grid3x3, search: { view: "categories" } },
-  { to: "/orders", label: "Orders", icon: ClipboardList },
+];
+
+const BUYER_LINKS: MenuLink[] = [
+  { to: "/orders", label: "My Orders", icon: ClipboardList },
   { to: "/messages", label: "Messages", icon: MessageSquare },
   { to: "/favorites", label: "Favorites", icon: Heart },
   { to: "/notifications", label: "Notifications", icon: Bell },
-  { to: "/wallet", label: "Wallet", icon: Wallet },
+  { to: "/wallet", label: "Payments", icon: Wallet },
+];
+
+const FREELANCER_LINKS: MenuLink[] = [
+  { to: "/gigs/manage", label: "My Gigs", icon: LayoutGrid },
+  { to: "/orders", label: "Sales & Deliveries", icon: ClipboardList },
+  { to: "/messages", label: "Messages", icon: MessageSquare },
+  { to: "/notifications", label: "Notifications", icon: Bell },
+  { to: "/wallet", label: "Earnings & Withdrawals", icon: Wallet },
+];
+
+const COMMON_BOTTOM: MenuLink[] = [
   { to: "/settings", label: "Profile", icon: User },
   { to: "/settings", label: "Settings", icon: Settings },
-  { to: "/help", label: "Help Center", icon: HelpCircle },
-  { to: "/help", label: "Contact Support", icon: LifeBuoy, search: { section: "contact" } },
+  { to: "/help", label: "Help Center", icon: HelpCircle, pink: true },
+  { to: "/help", label: "Support", icon: LifeBuoy, search: { section: "contact" }, pink: true },
+  { to: "/help", label: "News", icon: Newspaper, search: { section: "news" }, pink: true },
   { to: "/legal/terms", label: "Terms & Conditions", icon: FileText },
   { to: "/legal/privacy", label: "Privacy Policy", icon: Shield },
-] as const;
+];
 
 export function SideMenu() {
   const [open, setOpen] = useState(false);
   const { user } = useSession();
+  const { isFreelancer } = useRole();
   const navigate = useNavigate();
   const qc = useQueryClient();
+
+  const links: MenuLink[] = [
+    ...COMMON_TOP,
+    ...(isFreelancer ? FREELANCER_LINKS : BUYER_LINKS),
+    ...COMMON_BOTTOM,
+  ];
 
   async function signOut() {
     setOpen(false);
@@ -64,26 +99,36 @@ export function SideMenu() {
       <SheetContent side="left" className="w-[85vw] max-w-xs overflow-y-auto p-0">
         <div className="flex items-center gap-2 border-b border-border px-5 py-4">
           <Logo className="h-9 w-9" />
-          <div>
+          <div className="min-w-0">
             <p className="text-base font-bold tracking-tight">FIVESOM</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="truncate text-[11px] text-muted-foreground">
               {user?.email ?? "Browsing as guest"}
             </p>
+            {user ? (
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+                {isFreelancer ? "Freelancer account" : "Buyer account"}
+              </p>
+            ) : null}
           </div>
         </div>
         <nav className="flex flex-col py-2">
-          {LINKS.map((l) => {
+          {links.map((l) => {
             const Icon = l.icon;
             return (
               <Link
                 key={`${l.to}-${l.label}`}
-                to={l.to}
-                {...("search" in l ? { search: l.search as never } : {})}
+                to={l.to as never}
+                {...(l.search ? { search: l.search as never } : {})}
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
               >
-                <Icon className="h-4.5 w-4.5 text-muted-foreground" />
+                <Icon
+                  className={`h-4.5 w-4.5 ${l.pink ? "text-accent-pink" : "text-muted-foreground"}`}
+                />
                 {l.label}
+                {l.pink ? (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-accent-pink" />
+                ) : null}
               </Link>
             );
           })}
