@@ -96,9 +96,9 @@ function GigDetails() {
   const current = gallery.length ? gallery[Math.min(slide, gallery.length - 1)] : null;
   const reviewList = reviews.data ?? [];
   const sellerOnline = isOnline(seller?.profile?.last_seen);
-  const sellerSkills = seller?.freelancer?.skills ?? seller?.profile?.skills ?? [];
-  const sellerLanguages = seller?.profile?.languages ?? [];
-  const sellerTools = seller?.freelancer?.software_tools ?? [];
+  const sellerSkills: unknown[] = seller?.freelancer?.skills ?? seller?.profile?.skills ?? [];
+  const sellerLanguages: unknown[] = seller?.profile?.languages ?? [];
+  const sellerTools: unknown[] = seller?.freelancer?.software_tools ?? [];
   const requirements = (gig.data as { buyer_requirements?: string | null }).buyer_requirements;
 
   function step(dir: 1 | -1) {
@@ -474,7 +474,7 @@ function GigDetails() {
                     {seller?.freelancer?.years_experience ? (
                       <Section title="Experience">
                         <p className="text-xs text-muted-foreground">
-                          {String(seller.freelancer.years_experience)}
+                          {label(seller.freelancer.years_experience)}
                         </p>
                       </Section>
                     ) : null}
@@ -483,7 +483,7 @@ function GigDetails() {
                   {seller?.freelancer?.education_level ? (
                     <Section title="Education">
                       <p className="text-xs text-muted-foreground">
-                        {seller.freelancer.education_level}
+                        {label(seller.freelancer.education_level)}
                       </p>
                     </Section>
                   ) : null}
@@ -549,10 +549,21 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Chips({ items }: { items: string[] }) {
+/** Values can arrive as plain strings or as `{ name, slug }` rows. */
+function label(item: unknown): string {
+  if (typeof item === "string") return item;
+  if (item && typeof item === "object") {
+    const o = item as Record<string, unknown>;
+    return String(o['name'] ?? o['label'] ?? o['title'] ?? o['slug'] ?? "");
+  }
+  return String(item ?? "");
+}
+
+function Chips({ items }: { items: unknown[] }) {
+  const values = Array.from(new Set(items.map(label).filter(Boolean)));
   return (
     <div className="flex flex-wrap gap-1.5">
-      {items.map((i) => (
+      {values.map((i) => (
         <span
           key={i}
           className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px]"
