@@ -94,13 +94,15 @@ function HelpPage() {
     <MobileShell>
       <AppHeader title="Help Center" />
       <div className="space-y-6 px-4 pt-4">
-        <div className="rounded-2xl bg-primary/10 p-5">
-          <LifeBuoy className="h-6 w-6 text-primary" />
+        <div className="rounded-2xl bg-accent-pink/10 p-5">
+          <LifeBuoy className="h-6 w-6 text-accent-pink" />
           <h1 className="mt-2 text-lg font-bold">How can we help?</h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Browse common questions or send our team a message.
+            Browse common questions, track your tickets or send our team a message.
           </p>
         </div>
+
+        <NewsSection />
 
         <section>
           <h2 className="mb-2 text-sm font-semibold">Frequently asked</h2>
@@ -114,8 +116,11 @@ function HelpPage() {
           </Accordion>
         </section>
 
+        <TicketHistory />
+
         <section id="contact">
           <h2 className="mb-2 text-sm font-semibold">Contact support</h2>
+
           <form onSubmit={submit} className="space-y-3 rounded-xl border border-border bg-card p-4">
             <div className="space-y-1.5">
               <Label htmlFor="subject">Subject</Label>
