@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Check, CheckCheck, Loader2, Paperclip, Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -8,7 +8,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
-import { initials, type PublicProfile } from "@/lib/fivesom";
+import { initials, isOnline, type PublicProfile } from "@/lib/fivesom";
+import {
+  fileNameFromUrl,
+  isImageUrl,
+  uploadAttachment,
+  type ChatMessage,
+} from "@/lib/messaging";
 
 export const Route = createFileRoute("/_authenticated/messages/$conversationId")({
   head: () => ({
@@ -24,16 +30,8 @@ export const Route = createFileRoute("/_authenticated/messages/$conversationId")
   component: ConversationPage,
 });
 
-type Message = {
-  id: string;
-  conversation_id: string;
-  sender_id: string;
-  receiver_id: string | null;
-  message: string | null;
-  attachment_url: string | null;
-  is_read: boolean | null;
-  created_at: string;
-};
+const PROFILE_COLUMNS =
+  "id, full_name, username, profile_image_url, professional_title, bio, location, role, last_seen";
 
 function ConversationPage() {
   const { conversationId } = Route.useParams();
@@ -41,10 +39,15 @@ function ConversationPage() {
   const qc = useQueryClient();
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [peerTyping, setPeerTyping] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const typingChannel = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const convo = useQuery({
-    queryKey: ["conversation", conversationId],
+    queryKey: ["conversation", conversationId, user?.id],
+    enabled: Boolean(user?.id),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("conversations")
@@ -53,42 +56,31 @@ function ConversationPage() {
         .maybeSingle();
       if (error) throw error;
       if (!data) return null;
-      let counterpartId: string | null = null;
-      if (data.buyer_id === user?.id) {
-        const { data: fl } = await supabase
-          .from("public_freelancers")
-          .select("user_id")
-          .eq("id", data.freelancer_id)
-          .maybeSingle();
-        counterpartId = (fl?.user_id as string) ?? null;
-      } else {
-        counterpartId = data.buyer_id as string;
-      }
-      let counterpart: PublicProfile | null = null;
-      if (counterpartId) {
-        const { data: pr } = await supabase
-          .from("public_profiles")
-          .select(
-            "id, full_name, username, profile_image_url, professional_title, bio, location, role, last_seen",
-          )
-          .eq("id", counterpartId)
-          .maybeSingle();
-        counterpart = (pr as PublicProfile) ?? null;
-      }
-      return { ...data, counterpart, counterpartId };
+      // Both columns store auth user ids (same model as the website).
+      const counterpartId =
+        data.buyer_id === user?.id ? (data.freelancer_id as string) : (data.buyer_id as string);
+      const { data: pr } = await supabase
+        .from("public_profiles")
+        .select(PROFILE_COLUMNS)
+        .eq("id", counterpartId)
+        .maybeSingle();
+      return { ...data, counterpartId, counterpart: (pr as PublicProfile) ?? null };
     },
   });
 
   const messages = useQuery({
     queryKey: ["messages", conversationId],
-    queryFn: async (): Promise<Message[]> => {
+    refetchInterval: 15000,
+    queryFn: async (): Promise<ChatMessage[]> => {
       const { data, error } = await supabase
         .from("messages")
-        .select("*")
+        .select(
+          "id, conversation_id, sender_id, receiver_id, message, attachment_url, is_read, created_at",
+        )
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return (data ?? []) as Message[];
+      return (data ?? []) as ChatMessage[];
     },
   });
 
@@ -98,13 +90,14 @@ function ConversationPage() {
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "messages",
           filter: `conversation_id=eq.${conversationId}`,
         },
         () => {
           void qc.invalidateQueries({ queryKey: ["messages", conversationId] });
+          void qc.invalidateQueries({ queryKey: ["inbox"] });
         },
       )
       .subscribe();
@@ -113,11 +106,29 @@ function ConversationPage() {
     };
   }, [conversationId, qc]);
 
+  // Typing indicator over a presence/broadcast channel (no DB writes).
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel(`typing:${conversationId}`, { config: { broadcast: { self: false } } })
+      .on("broadcast", { event: "typing" }, (payload) => {
+        if ((payload["payload"] as { userId?: string } | undefined)?.userId === user.id) return;
+        setPeerTyping(true);
+        window.setTimeout(() => setPeerTyping(false), 2500);
+      })
+      .subscribe();
+    typingChannel.current = ch;
+    return () => {
+      typingChannel.current = null;
+      void supabase.removeChannel(ch);
+    };
+  }, [conversationId, user]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.data?.length]);
+  }, [messages.data?.length, peerTyping]);
 
-  // Mark incoming messages as read
+  // Read receipts: mark incoming messages as read.
   useEffect(() => {
     if (!user || !messages.data?.length) return;
     const unread = messages.data.filter((m) => m.receiver_id === user.id && !m.is_read);
@@ -128,27 +139,58 @@ function ConversationPage() {
       .in(
         "id",
         unread.map((m) => m.id),
-      );
-  }, [messages.data, user]);
+      )
+      .then(() => qc.invalidateQueries({ queryKey: ["inbox"] }));
+  }, [messages.data, user, qc]);
+
+  async function insertMessage(fields: { message?: string; attachment_url?: string }) {
+    const { error } = await supabase.from("messages").insert({
+      conversation_id: conversationId,
+      sender_id: user!.id,
+      receiver_id: convo.data?.counterpartId ?? null,
+      message: fields.message ?? null,
+      attachment_url: fields.attachment_url ?? null,
+    });
+    if (error) throw error;
+    void qc.invalidateQueries({ queryKey: ["messages", conversationId] });
+    void qc.invalidateQueries({ queryKey: ["inbox"] });
+  }
 
   async function send(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     if (!text.trim() || !user) return;
     setSending(true);
-    const { error } = await supabase.from("messages").insert({
-      conversation_id: conversationId,
-      sender_id: user.id,
-      receiver_id: convo.data?.counterpartId ?? null,
-      message: text.trim(),
-    });
-    setSending(false);
-    if (error) {
-      toast.error(error.message);
+    try {
+      await insertMessage({ message: text.trim() });
+      setText("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Message not sent.");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (file.size > 25 * 1024 * 1024) {
+      toast.error("Files must be 25 MB or smaller.");
       return;
     }
-    setText("");
-    void qc.invalidateQueries({ queryKey: ["messages", conversationId] });
+    setUploading(true);
+    try {
+      const url = await uploadAttachment(user.id, file);
+      await insertMessage({ attachment_url: url });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+    }
   }
+
+  const counterpart = convo.data?.counterpart;
+  const online = isOnline(counterpart?.last_seen);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -157,19 +199,35 @@ function ConversationPage() {
           <Link
             to="/messages"
             className="grid h-9 w-9 place-items-center rounded-full border border-border"
+            aria-label="Back to messages"
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
-          <Avatar className="h-9 w-9">
-            <AvatarImage src={convo.data?.counterpart?.profile_image_url ?? undefined} alt="" />
-            <AvatarFallback>{initials(convo.data?.counterpart?.full_name)}</AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-9 w-9">
+              <AvatarImage
+                src={counterpart?.profile_image_url ?? undefined}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+              <AvatarFallback>{initials(counterpart?.full_name)}</AvatarFallback>
+            </Avatar>
+            {online ? (
+              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card bg-emerald-500" />
+            ) : null}
+          </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">
-              {convo.data?.counterpart?.full_name ?? "FIVESOM user"}
+              {counterpart?.full_name ?? "FIVESOM user"}
             </p>
-            <p className="truncate text-[11px] capitalize text-muted-foreground">
-              {convo.data?.counterpart?.role ?? ""}
+            <p className="truncate text-[11px] text-muted-foreground">
+              {peerTyping
+                ? "typing…"
+                : online
+                  ? "Online"
+                  : counterpart?.username
+                    ? `@${counterpart.username}`
+                    : (counterpart?.role ?? "")}
             </p>
           </div>
         </header>
@@ -191,19 +249,57 @@ function ConversationPage() {
                       : "rounded-bl-sm bg-muted text-foreground"
                   }`}
                 >
-                  <p className="whitespace-pre-wrap break-words">{m.message}</p>
+                  {m.attachment_url ? (
+                    isImageUrl(m.attachment_url) ? (
+                      <a href={m.attachment_url} target="_blank" rel="noreferrer">
+                        <img
+                          src={m.attachment_url}
+                          alt="Attachment"
+                          loading="lazy"
+                          className="mb-1 max-h-60 w-full rounded-lg object-cover"
+                        />
+                      </a>
+                    ) : (
+                      <a
+                        href={m.attachment_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mb-1 flex items-center gap-2 rounded-lg bg-background/20 px-2 py-1.5 text-xs underline"
+                      >
+                        <Paperclip className="h-3.5 w-3.5" />
+                        <span className="truncate">{fileNameFromUrl(m.attachment_url)}</span>
+                      </a>
+                    )
+                  ) : null}
+                  {m.message ? (
+                    <p className="whitespace-pre-wrap break-words">{m.message}</p>
+                  ) : null}
                   <p
-                    className={`mt-1 text-[10px] ${mine ? "text-primary-foreground/70" : "text-muted-foreground"}`}
+                    className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${mine ? "text-primary-foreground/70" : "text-muted-foreground"}`}
                   >
                     {new Date(m.created_at).toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
+                    {mine ? (
+                      m.is_read ? (
+                        <CheckCheck className="h-3 w-3" />
+                      ) : (
+                        <Check className="h-3 w-3" />
+                      )
+                    ) : null}
                   </p>
                 </div>
               </div>
             );
           })}
+          {peerTyping ? (
+            <div className="flex justify-start">
+              <div className="rounded-2xl rounded-bl-sm bg-muted px-3.5 py-2 text-xs text-muted-foreground">
+                typing…
+              </div>
+            </div>
+          ) : null}
           <div ref={bottomRef} />
         </div>
 
@@ -211,9 +307,36 @@ function ConversationPage() {
           onSubmit={send}
           className="fixed inset-x-0 bottom-0 mx-auto flex max-w-md items-center gap-2 border-t border-border bg-card px-3 py-3"
         >
+          <input
+            ref={fileRef}
+            type="file"
+            hidden
+            onChange={onPickFile}
+            accept="image/*,video/*,.pdf,.doc,.docx,.zip,.rar,.txt,.csv,.xlsx,.psd,.ai"
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border text-muted-foreground disabled:opacity-50"
+            aria-label="Attach a file"
+          >
+            {uploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Paperclip className="h-4 w-4" />
+            )}
+          </button>
           <Input
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              setText(e.target.value);
+              void typingChannel.current?.send({
+                type: "broadcast",
+                event: "typing",
+                payload: { userId: user?.id },
+              });
+            }}
             placeholder="Type a message..."
             className="h-11 rounded-full"
           />
