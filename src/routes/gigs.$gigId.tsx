@@ -126,35 +126,18 @@ function GigDetails() {
       return;
     }
     if (!gig.data) return;
-    const freelancerUserId = seller?.profile?.id;
     setBusy(true);
-    const { data: existing } = await supabase
-      .from("conversations")
-      .select("id")
-      .eq("buyer_id", user.id)
-      .eq("freelancer_id", gig.data.freelancer_id)
-      .maybeSingle();
-    let convoId = existing?.id as string | undefined;
-    if (!convoId) {
-      const { data, error } = await supabase
-        .from("conversations")
-        .insert({ buyer_id: user.id, freelancer_id: gig.data.freelancer_id })
-        .select("id")
-        .maybeSingle();
-      if (error) {
-        setBusy(false);
-        toast.error(error.message);
-        return;
-      }
-      convoId = data?.id as string | undefined;
-    }
-    setBusy(false);
-    if (convoId) {
-      navigate({
-        to: "/messages/$conversationId",
-        params: { conversationId: convoId },
-        search: freelancerUserId ? { to: freelancerUserId } : {},
-      });
+    try {
+      const sellerUserId =
+        seller?.profile?.id ?? (await freelancerUserId(gig.data.freelancer_id));
+      if (!sellerUserId) throw new Error("Could not find this freelancer.");
+      if (sellerUserId === user.id) throw new Error("This is your own gig.");
+      const convoId = await openOrCreateConversation(user.id, sellerUserId);
+      navigate({ to: "/messages/$conversationId", params: { conversationId: convoId } });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not open this chat.");
+    } finally {
+      setBusy(false);
     }
   }
 
