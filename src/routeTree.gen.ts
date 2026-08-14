@@ -29,6 +29,7 @@ import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedMessagesConversationIdRouteImport } from './routes/_authenticated/messages.$conversationId'
 import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders.index'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
+import { Route as AuthenticatedMessagesSystemChannelIdRouteImport } from './routes/_authenticated/messages.system.$channelId'
 import { Route as AuthenticatedOrdersOrderIdRequirementsRouteImport } from './routes/_authenticated/orders.$orderId.requirements'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 
@@ -137,6 +138,12 @@ const AuthenticatedOrdersOrderIdRoute =
     path: '/orders/$orderId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMessagesSystemChannelIdRoute =
+  AuthenticatedMessagesSystemChannelIdRouteImport.update({
+    id: '/messages/system/$channelId',
+    path: '/messages/system/$channelId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOrdersOrderIdRequirementsRoute =
   AuthenticatedOrdersOrderIdRequirementsRouteImport.update({
     id: '/requirements',
@@ -169,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRouteWithChildren
   '/messages/': typeof AuthenticatedMessagesIndexRoute
   '/orders/': typeof AuthenticatedOrdersIndexRoute
+  '/messages/system/$channelId': typeof AuthenticatedMessagesSystemChannelIdRoute
   '/orders/$orderId/requirements': typeof AuthenticatedOrdersOrderIdRequirementsRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
@@ -192,6 +200,7 @@ export interface FileRoutesByTo {
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRouteWithChildren
   '/messages': typeof AuthenticatedMessagesIndexRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
+  '/messages/system/$channelId': typeof AuthenticatedMessagesSystemChannelIdRoute
   '/orders/$orderId/requirements': typeof AuthenticatedOrdersOrderIdRequirementsRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
@@ -217,6 +226,7 @@ export interface FileRoutesById {
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRouteWithChildren
   '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
   '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
+  '/_authenticated/messages/system/$channelId': typeof AuthenticatedMessagesSystemChannelIdRoute
   '/_authenticated/orders/$orderId/requirements': typeof AuthenticatedOrdersOrderIdRequirementsRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/messages/'
     | '/orders/'
+    | '/messages/system/$channelId'
     | '/orders/$orderId/requirements'
     | '/api/public/webhooks/stripe'
   fileRoutesByTo: FileRoutesByTo
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/orders/$orderId'
     | '/messages'
     | '/orders'
+    | '/messages/system/$channelId'
     | '/orders/$orderId/requirements'
     | '/api/public/webhooks/stripe'
   id:
@@ -289,6 +301,7 @@ export interface FileRouteTypes {
     | '/_authenticated/orders/$orderId'
     | '/_authenticated/messages/'
     | '/_authenticated/orders/'
+    | '/_authenticated/messages/system/$channelId'
     | '/_authenticated/orders/$orderId/requirements'
     | '/api/public/webhooks/stripe'
   fileRoutesById: FileRoutesById
@@ -450,6 +463,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrdersOrderIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/messages/system/$channelId': {
+      id: '/_authenticated/messages/system/$channelId'
+      path: '/messages/system/$channelId'
+      fullPath: '/messages/system/$channelId'
+      preLoaderRoute: typeof AuthenticatedMessagesSystemChannelIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/orders/$orderId/requirements': {
       id: '/_authenticated/orders/$orderId/requirements'
       path: '/requirements'
@@ -492,6 +512,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOrdersOrderIdRoute: typeof AuthenticatedOrdersOrderIdRouteWithChildren
   AuthenticatedMessagesIndexRoute: typeof AuthenticatedMessagesIndexRoute
   AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
+  AuthenticatedMessagesSystemChannelIdRoute: typeof AuthenticatedMessagesSystemChannelIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -505,6 +526,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOrdersOrderIdRoute: AuthenticatedOrdersOrderIdRouteWithChildren,
   AuthenticatedMessagesIndexRoute: AuthenticatedMessagesIndexRoute,
   AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,
+  AuthenticatedMessagesSystemChannelIdRoute:
+    AuthenticatedMessagesSystemChannelIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
