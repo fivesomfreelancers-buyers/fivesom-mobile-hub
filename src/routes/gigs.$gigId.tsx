@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
+import { freelancerUserId, openOrCreateConversation } from "@/lib/messaging";
 import {
   freelancerProfilesQuery,
   gigGallery,
