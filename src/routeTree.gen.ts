@@ -23,6 +23,7 @@ import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as FreelancersFreelancerIdRouteImport } from './routes/freelancers.$freelancerId'
 import { Route as GigsGigIdRouteImport } from './routes/gigs.$gigId'
 import { Route as LegalPrivacyRouteImport } from './routes/legal/privacy'
 import { Route as LegalTermsRouteImport } from './routes/legal/terms'
@@ -106,6 +107,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FreelancersFreelancerIdRoute = FreelancersFreelancerIdRouteImport.update({
+  id: '/freelancers/$freelancerId',
+  path: '/freelancers/$freelancerId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GigsGigIdRoute = GigsGigIdRouteImport.update({
   id: '/gigs/$gigId',
   path: '/gigs/$gigId',
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof AuthenticatedSupportRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/freelancers/$freelancerId': typeof FreelancersFreelancerIdRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/support': typeof AuthenticatedSupportRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/freelancers/$freelancerId': typeof FreelancersFreelancerIdRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/freelancers/$freelancerId': typeof FreelancersFreelancerIdRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
@@ -272,6 +281,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/wallet'
     | '/auth/callback'
+    | '/freelancers/$freelancerId'
     | '/gigs/$gigId'
     | '/legal/privacy'
     | '/legal/terms'
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/wallet'
     | '/auth/callback'
+    | '/freelancers/$freelancerId'
     | '/gigs/$gigId'
     | '/legal/privacy'
     | '/legal/terms'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/_authenticated/support'
     | '/_authenticated/wallet'
     | '/auth/callback'
+    | '/freelancers/$freelancerId'
     | '/gigs/$gigId'
     | '/legal/privacy'
     | '/legal/terms'
@@ -351,6 +363,7 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  FreelancersFreelancerIdRoute: typeof FreelancersFreelancerIdRoute
   GigsGigIdRoute: typeof GigsGigIdRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
@@ -456,6 +469,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/callback'
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/freelancers/$freelancerId': {
+      id: '/freelancers/$freelancerId'
+      path: '/freelancers/$freelancerId'
+      fullPath: '/freelancers/$freelancerId'
+      preLoaderRoute: typeof FreelancersFreelancerIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gigs/$gigId': {
@@ -604,6 +624,7 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  FreelancersFreelancerIdRoute: FreelancersFreelancerIdRoute,
   GigsGigIdRoute: GigsGigIdRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,

@@ -230,9 +230,11 @@ function FreelancerCard({
   const p = entry?.profile;
   const online = isOnline(p?.last_seen);
   return (
-    <div
+    <Link
+      to="/freelancers/$freelancerId"
+      params={{ freelancerId }}
       aria-hidden={ariaHidden ? true : undefined}
-      className="w-24 shrink-0 rounded-xl border border-border bg-card p-3 text-center"
+      className="w-24 shrink-0 rounded-xl border border-border bg-card p-3 text-center active:scale-95 transition-transform"
     >
       <div className="relative mx-auto h-12 w-12">
         <Avatar className="h-12 w-12">
@@ -257,7 +259,7 @@ function FreelancerCard({
         <Star className="h-3 w-3 fill-warning text-warning" />
         {Number(entry?.freelancer?.rating ?? 0).toFixed(1)}
       </p>
-    </div>
+    </Link>
   );
 }
 

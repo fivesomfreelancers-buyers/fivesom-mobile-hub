@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
+import { getServerPublicClient } from "@/integrations/supabase/client.server";
+
 // TODO: replace with your project URL once a project name or custom domain is set.
 const BASE_URL = "";
 
@@ -14,6 +16,12 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
+        const supabase = getServerPublicClient();
+        const { data: freelancers } = await supabase
+          .from("public_freelancers")
+          .select("id")
+          .limit(1000);
+
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "daily", priority: "1.0" },
           { path: "/search", changefreq: "daily", priority: "0.8" },
@@ -22,6 +30,11 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/auth", changefreq: "monthly", priority: "0.3" },
           { path: "/legal/terms", changefreq: "yearly", priority: "0.3" },
           { path: "/legal/privacy", changefreq: "yearly", priority: "0.3" },
+          ...(freelancers ?? []).map((f) => ({
+            path: `/freelancers/${f.id}`,
+            changefreq: "weekly" as const,
+            priority: "0.6",
+          })),
         ];
 
         const urls = entries.map((e) =>
