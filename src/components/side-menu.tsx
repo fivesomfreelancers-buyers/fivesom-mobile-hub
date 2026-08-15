@@ -5,15 +5,12 @@ import {
   Compass,
   Grid3x3,
   Heart,
-  HelpCircle,
   Home,
   LayoutGrid,
-  LifeBuoy,
   ClipboardList,
   LogOut,
   MessageSquare,
   Menu,
-  Newspaper,
   Settings,
   Shield,
   User,
@@ -34,8 +31,6 @@ type MenuLink = {
   label: string;
   icon: LucideIcon;
   search?: Record<string, string>;
-  /** Support & News use the pink accent so they stand out from the blue brand. */
-  pink?: boolean;
 };
 
 const COMMON_TOP: MenuLink[] = [
@@ -63,9 +58,6 @@ const FREELANCER_LINKS: MenuLink[] = [
 const COMMON_BOTTOM: MenuLink[] = [
   { to: "/settings", label: "Profile", icon: User },
   { to: "/settings", label: "Settings", icon: Settings },
-  { to: "/help", label: "Help Center", icon: HelpCircle, pink: true },
-  { to: "/support", label: "Support", icon: LifeBuoy, pink: true },
-  { to: "/news", label: "News", icon: Newspaper, pink: true },
 
   { to: "/legal/terms", label: "Terms & Conditions", icon: FileText },
   { to: "/legal/privacy", label: "Privacy Policy", icon: Shield },
@@ -123,13 +115,9 @@ export function SideMenu() {
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
               >
-                <Icon
-                  className={`h-4.5 w-4.5 ${l.pink ? "text-accent-pink" : "text-muted-foreground"}`}
-                />
+                <Icon className="h-4.5 w-4.5 text-muted-foreground" />
                 {l.label}
-                {l.pink ? (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-accent-pink" />
-                ) : null}
+
               </Link>
             );
           })}
