@@ -80,6 +80,8 @@ function statusTone(status: string | null) {
       return "bg-destructive/15 text-destructive";
     case "delivered":
       return "bg-warning/20 text-foreground";
+    case "disputed":
+      return "bg-destructive/15 text-destructive";
     case "in_progress":
       return "bg-primary/15 text-primary";
     default:
@@ -381,6 +383,20 @@ function OrderDetailPage() {
             </ol>
           )}
         </section>
+
+        {isBuyer && !requirements.data?.instructions && !order.data.requirements ? (
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+            <p className="text-sm font-semibold">Send your requirements</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              The seller can only start once you describe what you need.
+            </p>
+            <Button className="mt-3 h-11 w-full rounded-xl" asChild>
+              <Link to="/orders/$orderId/requirements" params={{ orderId }}>
+                Submit requirements
+              </Link>
+            </Button>
+          </div>
+        ) : null}
 
         <section>
           <h2 className="mb-2 text-sm font-semibold">Requirements</h2>
