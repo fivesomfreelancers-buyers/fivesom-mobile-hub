@@ -10,8 +10,9 @@ import {
   User,
   Wallet,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Camera, Loader2 } from "lucide-react";
 
 import { AppHeader } from "@/components/app-header";
 import { MobileShell } from "@/components/mobile-shell";
