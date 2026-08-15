@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useFreelancer, useProfile, useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadAvatar } from "@/lib/avatar";
 import { initials, money } from "@/lib/fivesom";
 
 export const Route = createFileRoute("/_authenticated/settings")({
