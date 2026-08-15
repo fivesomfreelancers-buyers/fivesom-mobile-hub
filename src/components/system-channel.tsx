@@ -4,7 +4,7 @@ import { ArrowLeft, Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { Logo } from "@/components/logo";
+import { ChannelLogo } from "@/components/channel-logo";
 import { Input } from "@/components/ui/input";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
