@@ -100,7 +100,7 @@ export async function uploadBannerMedia(file: Blob, filename: string): Promise<s
   const path = `${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from(BANNER_BUCKET).upload(path, file, {
     cacheControl: "3600",
-    contentType: file.type || undefined,
+    ...(file.type ? { contentType: file.type } : {}),
     upsert: false,
   });
   if (error) throw error;
