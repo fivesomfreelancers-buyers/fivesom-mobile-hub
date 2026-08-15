@@ -151,10 +151,36 @@ function SettingsPage() {
       <div className="space-y-5 p-4">
         <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={profile.data?.profile_image_url ?? undefined} alt="" />
-              <AvatarFallback>{initials(profile.data?.full_name)}</AvatarFallback>
-            </Avatar>
+            <div className="relative shrink-0">
+              <Avatar className="h-16 w-16">
+                <AvatarImage
+                  src={profile.data?.profile_image_url ?? undefined}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+                <AvatarFallback>{initials(profile.data?.full_name)}</AvatarFallback>
+              </Avatar>
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => void onPickPhoto(e.target.files?.[0])}
+              />
+              <button
+                type="button"
+                aria-label="Change profile photo"
+                disabled={uploadingPhoto}
+                onClick={() => fileInput.current?.click()}
+                className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border-2 border-card bg-primary text-primary-foreground"
+              >
+                {uploadingPhoto ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Camera className="h-3.5 w-3.5" />
+                )}
+              </button>
+            </div>
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-1.5 truncate text-base font-semibold">
                 {profile.data?.full_name ?? "Your name"}
