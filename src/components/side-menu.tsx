@@ -5,15 +5,12 @@ import {
   Compass,
   Grid3x3,
   Heart,
-  HelpCircle,
   Home,
   LayoutGrid,
-  LifeBuoy,
   ClipboardList,
   LogOut,
   MessageSquare,
   Menu,
-  Newspaper,
   Settings,
   Shield,
   User,
@@ -34,8 +31,6 @@ type MenuLink = {
   label: string;
   icon: LucideIcon;
   search?: Record<string, string>;
-  /** Support & News use the pink accent so they stand out from the blue brand. */
-  pink?: boolean;
 };
 
 const COMMON_TOP: MenuLink[] = [
