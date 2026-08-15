@@ -35,6 +35,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [role, setRole] = useState<"buyer" | "freelancer">("buyer");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -56,11 +57,16 @@ function AuthPage() {
         password,
         options: {
           emailRedirectTo: window.location.origin,
-          data: { full_name: fullName },
+          data: { full_name: fullName, role },
         },
       });
       setBusy(false);
       if (error) { toast.error(error.message); return; }
+      if (data.session?.user) {
+        // Keep the profile row in sync with the chosen account type so the
+        // website and the app agree on buyer vs freelancer immediately.
+        await supabase.from("profiles").update({ role }).eq("id", data.session.user.id);
+      }
       if (!data.session) {
         toast.success("Check your email to confirm your account.");
       } else {
@@ -123,6 +129,26 @@ function AuthPage() {
                 className="h-12 rounded-xl"
                 required
               />
+            </div>
+          ) : null}
+
+          {mode === "signup" ? (
+            <div className="space-y-1.5">
+              <Label>I want to</Label>
+              <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
+                {(["buyer", "freelancer"] as const).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setRole(r)}
+                    className={`rounded-lg py-2.5 text-xs font-semibold ${
+                      role === r ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                    }`}
+                  >
+                    {r === "buyer" ? "Buy services" : "Sell services"}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : null}
 
