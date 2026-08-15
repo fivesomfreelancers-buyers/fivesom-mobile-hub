@@ -89,18 +89,7 @@ function HomePage() {
         </form>
 
 
-        <div className="rounded-2xl bg-primary p-5 text-primary-foreground">
-          <h1 className="text-xl font-bold leading-snug">
-            Find, Hire & Work with the best freelancers
-          </h1>
-          <p className="mt-1 text-sm opacity-90">Connect. Work. Earn. Grow Together.</p>
-          <a
-            href="#gigs"
-            className="mt-4 inline-flex rounded-lg bg-primary-foreground px-4 py-2 text-xs font-semibold text-primary"
-          >
-            Explore Now
-          </a>
-        </div>
+        <HeroBannerSlider />
 
         <section>
           <SectionTitle title="Popular Services" />
