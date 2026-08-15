@@ -125,19 +125,19 @@ function HomePage() {
 
         <section>
           <SectionTitle title="Top Freelancers" />
-          <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-1">
-            {freelancers.isLoading
-              ? Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-32 w-24 rounded-xl" />
-                ))
-              : (freelancers.data ?? []).map((f) => (
-                  <FreelancerCard key={f.id} freelancerId={f.id} />
-                ))}
-            {!freelancers.isLoading && (freelancers.data ?? []).length === 0 && (
-              <p className="text-sm text-muted-foreground">No freelancers yet.</p>
-            )}
-          </div>
+          {freelancers.isLoading ? (
+            <div className="no-scrollbar -mx-4 flex gap-3 overflow-hidden px-4 pb-1">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-36 w-24 shrink-0 rounded-xl" />
+              ))}
+            </div>
+          ) : (freelancers.data ?? []).length === 0 ? (
+            <p className="text-sm text-muted-foreground">No freelancers yet.</p>
+          ) : (
+            <FreelancerMarquee ids={(freelancers.data ?? []).map((f) => f.id)} />
+          )}
         </section>
+
 
         <section id="gigs">
           <SectionTitle title={category ? "Filtered Gigs" : "Gigs Online"} />
