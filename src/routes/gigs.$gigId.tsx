@@ -305,8 +305,9 @@ function GigDetails() {
             </span>
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
-              {gig.data.delivery_time_days ?? 3} Days Delivery
+              {deliveryLabel(pkg?.delivery_time, gig.data.delivery_time_days)}
             </span>
+
             <span className="flex items-center gap-1">
               <RefreshCcw className="h-3.5 w-3.5" />
               {pkg?.revisions ?? "1"} Revisions
