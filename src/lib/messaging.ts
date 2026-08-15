@@ -148,21 +148,28 @@ export const inboxQuery = (userId: string | undefined) => ({
         fetchProfiles(rows.map((c) => (c.buyer_id === uid ? c.freelancer_id : c.buyer_id))),
       ]);
 
-      items = rows.map((c) => {
-        const otherId = c.buyer_id === uid ? c.freelancer_id : c.buyer_id;
-        const mine = (msgs ?? []).filter((m) => m.conversation_id === c.id);
-        const last = mine[0];
-        return {
-          kind: "user" as const,
-          id: c.id,
-          counterpart: profiles.get(otherId),
-          lastMessage: last
-            ? ((last.message as string | null) ?? (last.attachment_url ? "📎 Attachment" : null))
-            : null,
-          lastAt: (last?.created_at as string | undefined) ?? c.created_at,
-          unread: mine.filter((m) => m.receiver_id === uid && !m.is_read).length,
-        };
-      });
+      items = rows
+        .map((c) => {
+          const otherId = c.buyer_id === uid ? c.freelancer_id : c.buyer_id;
+          const mine = (msgs ?? []).filter((m) => m.conversation_id === c.id);
+          const last = mine[0];
+          return {
+            kind: "user" as const,
+            id: c.id,
+            counterpart: profiles.get(otherId),
+            lastMessage: last
+              ? ((last.message as string | null) ?? (last.attachment_url ? "📎 Attachment" : null))
+              : null,
+            lastAt: (last?.created_at as string | undefined) ?? c.created_at,
+            unread: mine.filter((m) => m.receiver_id === uid && !m.is_read).length,
+            hasMessages: mine.length > 0,
+          };
+        })
+        // Only real conversations: an empty thread (created by tapping
+        // "Contact freelancer") stays hidden until someone actually writes.
+        .filter((c) => c.hasMessages)
+        .map(({ hasMessages: _ignored, ...c }) => c);
+
     }
 
     const systemItems: ConversationListItem[] = ((systemConvos ?? []) as SystemConversation[]).map(
