@@ -119,25 +119,25 @@ export async function showFivesomAlert(payload: AlertPayload): Promise<void> {
   playAlertSound();
   if (notificationPermission() !== "granted") return;
 
-  const options: NotificationOptions & { actions?: { action: string; title: string }[] } = {
+  const options: Record<string, unknown> = {
     body: payload.body,
     icon: payload.icon || "/favicon.ico",
     badge: "/favicon.ico",
-    tag: payload.tag,
     data: { url: payload.url },
     requireInteraction: false,
   };
+  if (payload.tag) options["tag"] = payload.tag;
 
   const reg = swReg ?? (await registerNotificationWorker());
   if (reg) {
     await reg.showNotification(payload.title, {
       ...options,
       actions: [{ action: "reply", title: "Reply" }],
-    });
+    } as NotificationOptions);
     return;
   }
 
-  const n = new Notification(payload.title, options);
+  const n = new Notification(payload.title, options as NotificationOptions);
   n.onclick = () => {
     window.focus();
     window.location.href = payload.url;
