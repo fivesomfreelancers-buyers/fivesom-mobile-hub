@@ -12,7 +12,7 @@ export function AppHeader({ title }: { title?: string }) {
   const { data: profile } = useProfile();
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-card/95 px-4 py-3 backdrop-blur">
+    <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-card/95 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur">
       <div className="flex items-center gap-2">
         <SideMenu />
         {title ? (
