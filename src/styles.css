@@ -175,3 +175,24 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { scrollbar-width: none; }
 }
+
+/* Continuous right-to-left marquee used by the Top Freelancers rail. */
+@keyframes fivesom-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: fivesom-marquee var(--marquee-duration, 40s) linear infinite;
+}
+
+.marquee-track:hover,
+.marquee-track:active {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
+}
