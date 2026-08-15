@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, ClipboardList, MessageSquare } from "lucide-react";
 
@@ -9,6 +10,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
 import { money, timeAgo } from "@/lib/fivesom";
+import {
+  notificationPermission,
+  playAlertSound,
+  requestNotificationPermission,
+} from "@/lib/notify";
 
 export const Route = createFileRoute("/_authenticated/notifications")({
   head: () => ({
@@ -34,6 +40,11 @@ type Item = {
 
 function NotificationsPage() {
   const { user } = useSession();
+  const [perm, setPerm] = useState<NotificationPermission | "unsupported">("default");
+
+  useEffect(() => {
+    setPerm(notificationPermission());
+  }, []);
 
   const feed = useQuery({
     queryKey: ["notifications", user?.id],
@@ -101,6 +112,35 @@ function NotificationsPage() {
     <MobileShell>
       <AppHeader title="Notifications" />
       <div className="space-y-3 px-4 pt-4">
+        {perm !== "unsupported" ? (
+          <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+              <Bell className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold">Push alerts</p>
+              <p className="text-xs text-muted-foreground">
+                {perm === "granted"
+                  ? "You'll get the FIVESOM chime and a pop-up for new messages."
+                  : "Turn on pop-up alerts with the FIVESOM sound for new messages."}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant={perm === "granted" ? "outline" : "default"}
+              className="shrink-0 rounded-lg"
+              onClick={() => {
+                if (perm === "granted") {
+                  playAlertSound();
+                  return;
+                }
+                void requestNotificationPermission().then(setPerm);
+              }}
+            >
+              {perm === "granted" ? "Test sound" : "Enable"}
+            </Button>
+          </div>
+        ) : null}
         {feed.isLoading ? (
           Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)
         ) : (feed.data ?? []).length === 0 ? (
