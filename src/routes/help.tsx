@@ -106,7 +106,6 @@ function HelpPage() {
           </p>
         </div>
 
-        <NewsSection />
 
         <section>
           <h2 className="mb-2 text-sm font-semibold">Frequently asked</h2>
@@ -234,46 +233,3 @@ function TicketHistory() {
   );
 }
 
-/**
- * Platform news/announcements published from the FIVESOM backend.
- * Renders nothing until announcements exist, so it never shows fake content.
- */
-function NewsSection() {
-  const news = useQuery({
-    queryKey: ["platform-news"],
-    retry: false,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("news")
-        .select("id, title, body, created_at")
-        .order("created_at", { ascending: false })
-        .limit(10);
-      if (error) return [];
-      return (data ?? []) as {
-        id: string;
-        title: string | null;
-        body: string | null;
-        created_at: string;
-      }[];
-    },
-  });
-
-  if ((news.data ?? []).length === 0) return null;
-
-  return (
-    <section id="news">
-      <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold">
-        <Newspaper className="h-4 w-4 text-accent-pink" /> FIVESOM news
-      </h2>
-      <div className="space-y-2">
-        {(news.data ?? []).map((n) => (
-          <details key={n.id} className="rounded-xl border border-accent-pink/30 bg-card p-3">
-            <summary className="cursor-pointer text-sm font-semibold">{n.title}</summary>
-            <p className="mt-2 whitespace-pre-line text-xs text-muted-foreground">{n.body}</p>
-            <p className="mt-2 text-[10px] text-muted-foreground">{timeAgo(n.created_at)} ago</p>
-          </details>
-        ))}
-      </div>
-    </section>
-  );
-}
