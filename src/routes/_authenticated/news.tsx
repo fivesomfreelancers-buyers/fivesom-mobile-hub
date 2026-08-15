@@ -19,7 +19,10 @@ export const Route = createFileRoute("/_authenticated/news")({
         content: "Official FIVESOM announcements, platform updates and marketplace news.",
       },
       { property: "og:title", content: "FIVESOM News" },
-      { property: "og:description", content: "Official FIVESOM announcements and platform updates." },
+      {
+        property: "og:description",
+        content: "Official FIVESOM announcements and platform updates.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

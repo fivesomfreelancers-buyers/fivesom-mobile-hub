@@ -25,7 +25,10 @@ export const Route = createFileRoute("/help")({
   head: () => ({
     meta: [
       { title: "Help Center & Support — FIVESOM" },
-      { name: "description", content: "Get answers about orders, payments and deliveries, or contact FIVESOM support." },
+      {
+        name: "description",
+        content: "Get answers about orders, payments and deliveries, or contact FIVESOM support.",
+      },
       { property: "og:title", content: "Help Center — FIVESOM" },
       { property: "og:description", content: "Support for buyers and freelancers on FIVESOM." },
       { property: "og:type", content: "website" },
@@ -106,10 +109,13 @@ function HelpPage() {
           </p>
         </div>
 
-
         <section>
           <h2 className="mb-2 text-sm font-semibold">Frequently asked</h2>
-          <Accordion type="single" collapsible className="rounded-xl border border-border bg-card px-3">
+          <Accordion
+            type="single"
+            collapsible
+            className="rounded-xl border border-border bg-card px-3"
+          >
             {FAQS.map((f) => (
               <AccordionItem key={f.q} value={f.q}>
                 <AccordionTrigger className="text-left text-sm">{f.q}</AccordionTrigger>
@@ -171,7 +177,9 @@ function HelpPage() {
             <MessageSquare className="h-5 w-5 text-primary" />
             <div>
               <p className="text-sm font-semibold">Message a seller instead</p>
-              <p className="text-xs text-muted-foreground">Order-specific questions belong in chat.</p>
+              <p className="text-xs text-muted-foreground">
+                Order-specific questions belong in chat.
+              </p>
             </div>
           </Link>
         </section>
@@ -232,4 +240,3 @@ function TicketHistory() {
     </section>
   );
 }
-
