@@ -50,7 +50,15 @@ function SettingsPage() {
   const profile = useProfile();
   const freelancer = useFreelancer();
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ full_name: "", professional_title: "", location: "", bio: "" });
+  const [form, setForm] = useState({
+    full_name: "",
+    username: "",
+    professional_title: "",
+    location: "",
+    bio: "",
+    skills: "",
+    languages: "",
+  });
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -80,9 +88,12 @@ function SettingsPage() {
     if (profile.data) {
       setForm({
         full_name: profile.data.full_name ?? "",
+        username: profile.data.username ?? "",
         professional_title: profile.data.professional_title ?? "",
         location: profile.data.location ?? "",
         bio: profile.data.bio ?? "",
+        skills: (profile.data.skills ?? []).join(", "),
+        languages: (profile.data.languages ?? []).join(", "),
       });
     }
   }, [profile.data]);
@@ -125,7 +136,21 @@ function SettingsPage() {
   async function save(): Promise<void> {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").update(form).eq("id", user.id);
+    const list = (v: string) =>
+      v
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean);
+    const payload = {
+      full_name: form.full_name.trim(),
+      username: form.username.trim() || null,
+      professional_title: form.professional_title.trim() || null,
+      location: form.location.trim() || null,
+      bio: form.bio.trim() || null,
+      skills: list(form.skills),
+      languages: list(form.languages),
+    };
+    const { error } = await supabase.from("profiles").update(payload).eq("id", user.id);
     setSaving(false);
     if (error) {
       toast.error(error.message);
@@ -228,6 +253,14 @@ function SettingsPage() {
               />
             </div>
             <div className="space-y-1.5">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
               <Label htmlFor="title">Professional Title</Label>
               <Input
                 id="title"
@@ -250,6 +283,24 @@ function SettingsPage() {
                 rows={4}
                 value={form.bio}
                 onChange={(e) => setForm({ ...form, bio: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="skills">Skills (comma separated)</Label>
+              <Input
+                id="skills"
+                value={form.skills}
+                onChange={(e) => setForm({ ...form, skills: e.target.value })}
+                placeholder="Logo design, Branding"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="languages">Languages (comma separated)</Label>
+              <Input
+                id="languages"
+                value={form.languages}
+                onChange={(e) => setForm({ ...form, languages: e.target.value })}
+                placeholder="English, Somali"
               />
             </div>
             <div className="flex gap-2">

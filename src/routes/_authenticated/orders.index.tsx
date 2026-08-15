@@ -41,7 +41,15 @@ type Order = {
   created_at: string;
 };
 
-const TABS = ["all", "pending", "in_progress", "delivered", "completed", "cancelled"] as const;
+const TABS = [
+  "all",
+  "pending",
+  "in_progress",
+  "delivered",
+  "completed",
+  "cancelled",
+  "disputed",
+] as const;
 
 function statusTone(status: string | null) {
   switch (status) {
@@ -51,6 +59,8 @@ function statusTone(status: string | null) {
       return "bg-destructive/15 text-destructive";
     case "delivered":
       return "bg-warning/20 text-foreground";
+    case "disputed":
+      return "bg-destructive/15 text-destructive";
     case "in_progress":
       return "bg-primary/15 text-primary";
     default:
@@ -209,6 +219,13 @@ function OrdersPage() {
                 ) : null}
 
                 <div className="mt-3 flex gap-2">
+                  {view === "buying" && !o.requirements && o.payment_status === "paid" ? (
+                    <Button size="sm" className="flex-1" asChild>
+                      <Link to="/orders/$orderId/requirements" params={{ orderId: o.id }}>
+                        Submit requirements
+                      </Link>
+                    </Button>
+                  ) : null}
                   {view === "selling" && o.status === "pending" ? (
                     <Button size="sm" className="flex-1" onClick={() => updateStatus(o.id, "in_progress")}>
                       Accept Order

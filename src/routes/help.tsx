@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { LifeBuoy, Mail, MessageSquare, Newspaper } from "lucide-react";
+import { LifeBuoy, Mail, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -25,7 +25,10 @@ export const Route = createFileRoute("/help")({
   head: () => ({
     meta: [
       { title: "Help Center & Support — FIVESOM" },
-      { name: "description", content: "Get answers about orders, payments and deliveries, or contact FIVESOM support." },
+      {
+        name: "description",
+        content: "Get answers about orders, payments and deliveries, or contact FIVESOM support.",
+      },
       { property: "og:title", content: "Help Center — FIVESOM" },
       { property: "og:description", content: "Support for buyers and freelancers on FIVESOM." },
       { property: "og:type", content: "website" },
@@ -106,11 +109,13 @@ function HelpPage() {
           </p>
         </div>
 
-        <NewsSection />
-
         <section>
           <h2 className="mb-2 text-sm font-semibold">Frequently asked</h2>
-          <Accordion type="single" collapsible className="rounded-xl border border-border bg-card px-3">
+          <Accordion
+            type="single"
+            collapsible
+            className="rounded-xl border border-border bg-card px-3"
+          >
             {FAQS.map((f) => (
               <AccordionItem key={f.q} value={f.q}>
                 <AccordionTrigger className="text-left text-sm">{f.q}</AccordionTrigger>
@@ -172,7 +177,9 @@ function HelpPage() {
             <MessageSquare className="h-5 w-5 text-primary" />
             <div>
               <p className="text-sm font-semibold">Message a seller instead</p>
-              <p className="text-xs text-muted-foreground">Order-specific questions belong in chat.</p>
+              <p className="text-xs text-muted-foreground">
+                Order-specific questions belong in chat.
+              </p>
             </div>
           </Link>
         </section>
@@ -228,50 +235,6 @@ function TicketHistory() {
               Sent {timeAgo(t.created_at)} ago
             </p>
           </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/**
- * Platform news/announcements published from the FIVESOM backend.
- * Renders nothing until announcements exist, so it never shows fake content.
- */
-function NewsSection() {
-  const news = useQuery({
-    queryKey: ["platform-news"],
-    retry: false,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("news")
-        .select("id, title, body, created_at")
-        .order("created_at", { ascending: false })
-        .limit(10);
-      if (error) return [];
-      return (data ?? []) as {
-        id: string;
-        title: string | null;
-        body: string | null;
-        created_at: string;
-      }[];
-    },
-  });
-
-  if ((news.data ?? []).length === 0) return null;
-
-  return (
-    <section id="news">
-      <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold">
-        <Newspaper className="h-4 w-4 text-accent-pink" /> FIVESOM news
-      </h2>
-      <div className="space-y-2">
-        {(news.data ?? []).map((n) => (
-          <details key={n.id} className="rounded-xl border border-accent-pink/30 bg-card p-3">
-            <summary className="cursor-pointer text-sm font-semibold">{n.title}</summary>
-            <p className="mt-2 whitespace-pre-line text-xs text-muted-foreground">{n.body}</p>
-            <p className="mt-2 text-[10px] text-muted-foreground">{timeAgo(n.created_at)} ago</p>
-          </details>
         ))}
       </div>
     </section>
