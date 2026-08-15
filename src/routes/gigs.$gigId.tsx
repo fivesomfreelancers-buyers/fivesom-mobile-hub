@@ -347,7 +347,7 @@ function GigDetails() {
                     </li>
                   ))}
                   <li className="flex items-center justify-between border-t border-border pt-2 text-xs text-muted-foreground">
-                    <span>{pkg.delivery_time ?? "—"}</span>
+                    <span>{deliveryLabel(pkg.delivery_time, gig.data.delivery_time_days)}</span>
                     <span>{pkg.revisions ?? "1"} revisions</span>
                   </li>
                 </ul>
@@ -609,4 +609,16 @@ function Chips({ items }: { items: unknown[] }) {
       ))}
     </div>
   );
+}
+
+/** Shows the selected package's delivery time, falling back to the gig default. */
+function deliveryLabel(packageDelivery?: string | null, gigDays?: number | null) {
+  const raw = (packageDelivery ?? "").trim();
+  if (raw) {
+    const num = raw.match(/\d+/)?.[0];
+    if (num) return `${num} ${Number(num) === 1 ? "Day" : "Days"} Delivery`;
+    return raw;
+  }
+  const d = gigDays ?? 3;
+  return `${d} ${d === 1 ? "Day" : "Days"} Delivery`;
 }
