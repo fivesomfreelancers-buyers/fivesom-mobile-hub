@@ -6,8 +6,6 @@ import { AppHeader } from "@/components/app-header";
 import { MobileShell } from "@/components/mobile-shell";
 import { SystemChannel } from "@/components/system-channel";
 import { useSession } from "@/hooks/use-session";
-import { supabase } from "@/integrations/supabase/client";
-import { timeAgo } from "@/lib/fivesom";
 import { systemChannelIdQuery } from "@/lib/messaging";
 
 export const Route = createFileRoute("/_authenticated/news")({

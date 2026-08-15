@@ -19,7 +19,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
-import { timeAgo } from "@/lib/fivesom";
 
 export const Route = createFileRoute("/help")({
   head: () => ({
