@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { LifeBuoy, Mail, MessageSquare, Newspaper } from "lucide-react";
+import { LifeBuoy, Mail, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
+import { timeAgo } from "@/lib/fivesom";
 
 export const Route = createFileRoute("/help")({
   head: () => ({
