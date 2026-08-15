@@ -76,9 +76,8 @@ export function SystemChannel({
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
-          <div className="grid h-9 w-9 place-items-center rounded-full bg-muted">
-            <Logo className="h-6 w-6" />
-          </div>
+          <ChannelLogo className="h-9 w-9" />
+
           <div className="min-w-0">
             <h1 className="truncate text-sm font-semibold">{title}</h1>
             <p className="truncate text-[11px] text-muted-foreground">
