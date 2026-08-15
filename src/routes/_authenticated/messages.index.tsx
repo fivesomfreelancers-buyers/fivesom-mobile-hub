@@ -4,7 +4,7 @@ import { BadgeCheck, Search } from "lucide-react";
 import { useState } from "react";
 
 import { AppHeader } from "@/components/app-header";
-import { Logo } from "@/components/logo";
+import { ChannelLogo } from "@/components/channel-logo";
 import { MobileShell } from "@/components/mobile-shell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
