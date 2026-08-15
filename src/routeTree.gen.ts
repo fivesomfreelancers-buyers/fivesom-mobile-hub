@@ -15,8 +15,10 @@ import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as AuthenticatedNewsRouteImport } from './routes/_authenticated/news'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
@@ -62,6 +64,11 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedNewsRoute = AuthenticatedNewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedNotificationsRoute =
   AuthenticatedNotificationsRouteImport.update({
     id: '/notifications',
@@ -71,6 +78,11 @@ const AuthenticatedNotificationsRoute =
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
@@ -162,8 +174,10 @@ export interface FileRoutesByFullPath {
   '/help': typeof HelpRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/news': typeof AuthenticatedNewsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
@@ -186,8 +200,10 @@ export interface FileRoutesByTo {
   '/help': typeof HelpRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/news': typeof AuthenticatedNewsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
@@ -212,8 +228,10 @@ export interface FileRoutesById {
   '/help': typeof HelpRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/_authenticated/news': typeof AuthenticatedNewsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
@@ -238,8 +256,10 @@ export interface FileRouteTypes {
     | '/help'
     | '/reset-password'
     | '/search'
+    | '/news'
     | '/notifications'
     | '/settings'
+    | '/support'
     | '/wallet'
     | '/auth/callback'
     | '/gigs/$gigId'
@@ -262,8 +282,10 @@ export interface FileRouteTypes {
     | '/help'
     | '/reset-password'
     | '/search'
+    | '/news'
     | '/notifications'
     | '/settings'
+    | '/support'
     | '/wallet'
     | '/auth/callback'
     | '/gigs/$gigId'
@@ -287,8 +309,10 @@ export interface FileRouteTypes {
     | '/help'
     | '/reset-password'
     | '/search'
+    | '/_authenticated/news'
     | '/_authenticated/notifications'
     | '/_authenticated/settings'
+    | '/_authenticated/support'
     | '/_authenticated/wallet'
     | '/auth/callback'
     | '/gigs/$gigId'
@@ -365,6 +389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/news': {
+      id: '/_authenticated/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof AuthenticatedNewsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/notifications': {
       id: '/_authenticated/notifications'
       path: '/notifications'
@@ -377,6 +408,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/wallet': {
@@ -503,8 +541,10 @@ const AuthenticatedOrdersOrderIdRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedNewsRoute: typeof AuthenticatedNewsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedCheckoutGigIdRoute: typeof AuthenticatedCheckoutGigIdRoute
   AuthenticatedGigsManageRoute: typeof AuthenticatedGigsManageRoute
@@ -516,8 +556,10 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedNewsRoute: AuthenticatedNewsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedCheckoutGigIdRoute: AuthenticatedCheckoutGigIdRoute,
   AuthenticatedGigsManageRoute: AuthenticatedGigsManageRoute,

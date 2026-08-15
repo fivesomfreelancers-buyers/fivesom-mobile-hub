@@ -233,3 +233,36 @@ export function fileNameFromUrl(url: string) {
     return url.split("/").pop() ?? "attachment";
   }
 }
+
+/**
+ * Finds (or creates) this user's official FIVESOM channel of the given type.
+ * Returns null when the backend does not allow the app to create it, so the
+ * screen can fall back to a read-only view instead of erroring.
+ */
+export async function openSystemChannel(
+  userId: string,
+  type: SystemChannelType,
+): Promise<string | null> {
+  const { data: existing } = await supabase
+    .from("system_conversations")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("type", type)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (existing?.id) return existing.id as string;
+
+  const { data } = await supabase
+    .from("system_conversations")
+    .insert({ user_id: userId, type })
+    .select("id")
+    .maybeSingle();
+  return (data?.id as string | undefined) ?? null;
+}
+
+export const systemChannelIdQuery = (userId: string | undefined, type: SystemChannelType) => ({
+  queryKey: ["system-channel-id", userId, type],
+  enabled: Boolean(userId),
+  queryFn: () => openSystemChannel(userId!, type),
+});

@@ -64,8 +64,9 @@ const COMMON_BOTTOM: MenuLink[] = [
   { to: "/settings", label: "Profile", icon: User },
   { to: "/settings", label: "Settings", icon: Settings },
   { to: "/help", label: "Help Center", icon: HelpCircle, pink: true },
-  { to: "/help", label: "Support", icon: LifeBuoy, search: { section: "contact" }, pink: true },
-  { to: "/help", label: "News", icon: Newspaper, search: { section: "news" }, pink: true },
+  { to: "/support", label: "Support", icon: LifeBuoy, pink: true },
+  { to: "/news", label: "News", icon: Newspaper, pink: true },
+
   { to: "/legal/terms", label: "Terms & Conditions", icon: FileText },
   { to: "/legal/privacy", label: "Privacy Policy", icon: Shield },
 ];
