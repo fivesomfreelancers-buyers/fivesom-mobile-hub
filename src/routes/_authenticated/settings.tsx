@@ -52,6 +52,29 @@ function SettingsPage() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ full_name: "", professional_title: "", location: "", bio: "" });
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  async function onPickPhoto(file: File | undefined): Promise<void> {
+    if (!file || !user) return;
+    setUploadingPhoto(true);
+    try {
+      const url = await uploadAvatar(user.id, file);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ profile_image_url: url })
+        .eq("id", user.id);
+      if (error) throw error;
+      toast.success("Profile photo updated");
+      void qc.invalidateQueries({ queryKey: ["profile"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not upload photo");
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInput.current) fileInput.current.value = "";
+    }
+  }
+
 
   useEffect(() => {
     if (profile.data) {
