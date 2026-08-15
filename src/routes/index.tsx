@@ -197,19 +197,61 @@ function CategoryChip({
   );
 }
 
-function FreelancerCard({ freelancerId }: { freelancerId: string }) {
+/**
+ * Auto-scrolling rail: the list is rendered twice so the CSS marquee can loop
+ * seamlessly right-to-left, no matter how many freelancers exist.
+ * Speed scales with the number of cards; hovering/holding pauses it.
+ */
+function FreelancerMarquee({ ids }: { ids: string[] }) {
+  const duration = Math.max(18, ids.length * 5);
+  return (
+    <div className="-mx-4 overflow-hidden px-4">
+      <div
+        className="marquee-track gap-3 pb-1"
+        style={{ ["--marquee-duration" as string]: `${duration}s` }}
+      >
+        {[...ids, ...ids].map((id, i) => (
+          <FreelancerCard key={`${id}-${i}`} freelancerId={id} ariaHidden={i >= ids.length} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FreelancerCard({
+  freelancerId,
+  ariaHidden,
+}: {
+  freelancerId: string;
+  ariaHidden?: boolean;
+}) {
   const q = useQuery(freelancerProfilesQuery([freelancerId]));
   const entry = q.data?.[freelancerId];
   const p = entry?.profile;
+  const online = isOnline(p?.last_seen);
   return (
-    <div className="w-24 shrink-0 rounded-xl border border-border bg-card p-3 text-center">
-      <Avatar className="mx-auto h-12 w-12">
-        <AvatarImage src={p?.profile_image_url ?? undefined} alt="" />
-        <AvatarFallback className="text-xs">{initials(p?.full_name)}</AvatarFallback>
-      </Avatar>
+    <div
+      aria-hidden={ariaHidden ? true : undefined}
+      className="w-24 shrink-0 rounded-xl border border-border bg-card p-3 text-center"
+    >
+      <div className="relative mx-auto h-12 w-12">
+        <Avatar className="h-12 w-12">
+          <AvatarImage src={p?.profile_image_url ?? undefined} alt="" className="object-cover" />
+          <AvatarFallback className="text-xs">{initials(p?.full_name)}</AvatarFallback>
+        </Avatar>
+        <span
+          title={online ? "Online" : "Offline"}
+          className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-card ${
+            online ? "bg-success" : "bg-muted-foreground/50"
+          }`}
+        />
+      </div>
       <p className="mt-2 truncate text-[11px] font-semibold">{p?.full_name ?? "Freelancer"}</p>
       <p className="truncate text-[10px] text-muted-foreground">
         {entry?.freelancer?.professional_title ?? "Seller"}
+      </p>
+      <p className={`text-[9px] font-medium ${online ? "text-success" : "text-muted-foreground"}`}>
+        {online ? "Online" : "Offline"}
       </p>
       <p className="mt-1 flex items-center justify-center gap-1 text-[10px] font-medium">
         <Star className="h-3 w-3 fill-warning text-warning" />
@@ -218,4 +260,5 @@ function FreelancerCard({ freelancerId }: { freelancerId: string }) {
     </div>
   );
 }
+
 
