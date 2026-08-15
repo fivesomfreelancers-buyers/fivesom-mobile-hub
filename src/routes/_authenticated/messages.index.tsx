@@ -91,10 +91,9 @@ function MessagesPage() {
                   >
                     <div className="relative">
                       {isSystem ? (
-                        <div className="grid h-11 w-11 place-items-center rounded-full bg-[var(--color-accent-pink,theme(colors.primary.DEFAULT))]/10">
-                          <Logo className="h-7 w-7" />
-                        </div>
+                        <ChannelLogo className="h-11 w-11" />
                       ) : (
+
                         <Avatar className="h-11 w-11">
                           <AvatarImage
                             src={c.counterpart?.profile_image_url ?? undefined}
