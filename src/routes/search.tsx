@@ -301,6 +301,8 @@ function SearchPage() {
         </Sheet>
       </header>
 
+      <h1 className="px-4 pt-4 text-xl font-bold tracking-tight">Search Freelance Services</h1>
+
       <div className="space-y-6 px-4 pt-4">
         {!query ? (
           <>

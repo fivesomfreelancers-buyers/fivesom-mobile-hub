@@ -99,6 +99,30 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify([
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "FIVESOM",
+            description: "Freelance marketplace connecting buyers with vetted freelancers.",
+            logo: "/favicon.png",
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "FIVESOM",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: "/search?q={search_term_string}",
+              "query-input": "required name=search_term_string",
+            },
+          },
+        ]),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,

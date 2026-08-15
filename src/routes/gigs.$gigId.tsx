@@ -34,22 +34,61 @@ import {
 } from "@/lib/fivesom";
 
 export const Route = createFileRoute("/gigs/$gigId")({
-  head: () => ({
-    meta: [
-      { title: "Gig Details — FIVESOM" },
-      {
-        name: "description",
-        content: "View gig packages, pricing, delivery time and message the seller on FIVESOM.",
-      },
-      { property: "og:title", content: "Gig Details — FIVESOM" },
-      {
-        property: "og:description",
-        content: "Compare packages and order freelance services on FIVESOM.",
-      },
-      { property: "og:type", content: "article" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
+  loader: async ({ params, context }) => ({
+    gig: await context.queryClient.ensureQueryData(gigQuery(params.gigId)),
   }),
+  head: ({ params, loaderData }) => {
+    const gig = loaderData?.gig ?? null;
+    const title = gig ? `${gig.title} — FIVESOM` : "Gig Details — FIVESOM";
+    const plain = (gig?.description ?? "").replace(/\s+/g, " ").trim();
+    const price = gig ? `Starting at $${Number(gig.base_price).toFixed(2)}.` : "";
+    const description = gig
+      ? `${plain ? `${plain.slice(0, 120)} ` : ""}${price} Order "${gig.title}" on FIVESOM${
+          gig.delivery_time_days ? ` with delivery in ${gig.delivery_time_days} days` : ""
+        }.`.slice(0, 158)
+      : "View gig packages, pricing, delivery time and message the seller on FIVESOM.";
+    const image = gig?.thumbnail_url ?? gig?.images?.[0] ?? null;
+    const absoluteImage = image && /^https?:\/\//.test(image) ? image : null;
+
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "product" },
+        { property: "og:url", content: `/gigs/${params.gigId}` },
+        { name: "twitter:card", content: "summary_large_image" },
+        ...(absoluteImage
+          ? [
+              { property: "og:image", content: absoluteImage },
+              { name: "twitter:image", content: absoluteImage },
+            ]
+          : []),
+      ],
+      links: [{ rel: "canonical", href: `/gigs/${params.gigId}` }],
+      scripts: gig
+        ? [
+            {
+              type: "application/ld+json",
+              children: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Product",
+                name: gig.title,
+                ...(plain ? { description: plain.slice(0, 300) } : {}),
+                ...(absoluteImage ? { image: absoluteImage } : {}),
+                offers: {
+                  "@type": "Offer",
+                  price: Number(gig.base_price).toFixed(2),
+                  priceCurrency: "USD",
+                  availability: "https://schema.org/InStock",
+                },
+              }),
+            },
+          ]
+        : [],
+    };
+  },
   component: GigDetails,
   errorComponent: ({ error }) => (
     <div role="alert" className="p-6 text-sm text-destructive">
