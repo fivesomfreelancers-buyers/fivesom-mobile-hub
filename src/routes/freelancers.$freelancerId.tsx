@@ -13,11 +13,18 @@ import {
   isOnline,
   memberSince,
   money,
+  type PublicProfile,
+  type PublicFreelancer,
 } from "@/lib/fivesom";
+
+type LoaderData = {
+  profile: { freelancer: PublicFreelancer; profile?: PublicProfile | undefined } | null;
+};
 
 export const Route = createFileRoute("/freelancers/$freelancerId")({
   head: ({ params, loaderData }) => {
-    const profile = loaderData?.profile ?? null;
+    const data = (loaderData as unknown as LoaderData | undefined) ?? { profile: null };
+    const profile = data.profile?.profile ?? null;
     const name = profile?.full_name ?? profile?.username ?? "Freelancer";
     const title = profile?.professional_title ?? "FIVESOM Seller";
     return {
@@ -44,7 +51,8 @@ export const Route = createFileRoute("/freelancers/$freelancerId")({
 
 function FreelancerPage() {
   const { freelancerId } = Route.useParams();
-  const profile = Route.useLoaderData()?.profile;
+  const profileQuery = useQuery(freelancerProfilesQuery([freelancerId]));
+  const profile = profileQuery.data?.[freelancerId];
 
   const gigs = useQuery(gigsQuery({ freelancerId, limit: 60 }));
   const ids = [...new Set((gigs.data ?? []).map((g) => g.freelancer_id))];
