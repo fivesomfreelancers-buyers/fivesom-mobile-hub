@@ -80,6 +80,7 @@ export type GigFilters = {
   minPrice?: number;
   maxPrice?: number;
   maxDeliveryDays?: number;
+  freelancerId?: string;
   limit?: number;
 };
 
@@ -95,6 +96,7 @@ export const gigsQuery = (opts: GigFilters = {}) => ({
       .limit(opts.limit ?? 30);
     if (opts.category) q = q.eq("category_slug", opts.category);
     if (opts.subcategory) q = q.eq("subcategory_slug", opts.subcategory);
+    if (opts.freelancerId) q = q.eq("freelancer_id", opts.freelancerId);
     if (typeof opts.minPrice === "number") q = q.gte("base_price", opts.minPrice);
     if (typeof opts.maxPrice === "number") q = q.lte("base_price", opts.maxPrice);
     if (typeof opts.maxDeliveryDays === "number")
