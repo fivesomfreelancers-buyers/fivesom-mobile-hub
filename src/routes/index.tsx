@@ -15,7 +15,9 @@ import {
   freelancersQuery,
   gigsQuery,
   initials,
+  isOnline,
 } from "@/lib/fivesom";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
