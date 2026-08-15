@@ -10,8 +10,9 @@ import {
   User,
   Wallet,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Camera, Loader2 } from "lucide-react";
 
 import { AppHeader } from "@/components/app-header";
 import { MobileShell } from "@/components/mobile-shell";
@@ -22,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useFreelancer, useProfile, useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadAvatar } from "@/lib/avatar";
 import { initials, money } from "@/lib/fivesom";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -50,6 +52,29 @@ function SettingsPage() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ full_name: "", professional_title: "", location: "", bio: "" });
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  async function onPickPhoto(file: File | undefined): Promise<void> {
+    if (!file || !user) return;
+    setUploadingPhoto(true);
+    try {
+      const url = await uploadAvatar(user.id, file);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ profile_image_url: url })
+        .eq("id", user.id);
+      if (error) throw error;
+      toast.success("Profile photo updated");
+      void qc.invalidateQueries({ queryKey: ["profile"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not upload photo");
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInput.current) fileInput.current.value = "";
+    }
+  }
+
 
   useEffect(() => {
     if (profile.data) {
@@ -126,10 +151,36 @@ function SettingsPage() {
       <div className="space-y-5 p-4">
         <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={profile.data?.profile_image_url ?? undefined} alt="" />
-              <AvatarFallback>{initials(profile.data?.full_name)}</AvatarFallback>
-            </Avatar>
+            <div className="relative shrink-0">
+              <Avatar className="h-16 w-16">
+                <AvatarImage
+                  src={profile.data?.profile_image_url ?? undefined}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+                <AvatarFallback>{initials(profile.data?.full_name)}</AvatarFallback>
+              </Avatar>
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => void onPickPhoto(e.target.files?.[0])}
+              />
+              <button
+                type="button"
+                aria-label="Change profile photo"
+                disabled={uploadingPhoto}
+                onClick={() => fileInput.current?.click()}
+                className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border-2 border-card bg-primary text-primary-foreground"
+              >
+                {uploadingPhoto ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Camera className="h-3.5 w-3.5" />
+                )}
+              </button>
+            </div>
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-1.5 truncate text-base font-semibold">
                 {profile.data?.full_name ?? "Your name"}
@@ -224,17 +275,37 @@ function SettingsPage() {
             <Row
               icon={ShieldCheck}
               title="Account Verification"
-              subtitle="Verify your identity"
+              subtitle={
+                freelancer.data?.is_verified
+                  ? "Your identity is verified"
+                  : "Contact support to verify your identity"
+              }
               trailing={freelancer.data?.is_verified ? "Verified" : "Not verified"}
+              onClick={() =>
+                freelancer.data?.is_verified
+                  ? toast.success("Your account is already verified")
+                  : navigate({ to: "/help", search: { section: "contact" } as never })
+              }
             />
             <Row
               icon={Wallet}
               title={isFreelancer ? "Earnings" : "Wallet"}
               subtitle="Balance and payouts"
               trailing={money(Number(wallet.data?.balance ?? 0))}
+              onClick={() => navigate({ to: "/wallet" })}
             />
-            <Row icon={CreditCard} title="Payment Methods" subtitle="Manage your payment methods" />
-            <Row icon={Bell} title="Notifications" subtitle="Manage notification preferences" />
+            <Row
+              icon={CreditCard}
+              title="Payment Methods"
+              subtitle="Manage your payment methods"
+              onClick={() => navigate({ to: "/wallet" })}
+            />
+            <Row
+              icon={Bell}
+              title="Notifications"
+              subtitle="Manage notification preferences"
+              onClick={() => navigate({ to: "/notifications" })}
+            />
           </div>
         )}
 
