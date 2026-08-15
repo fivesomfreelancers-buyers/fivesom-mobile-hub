@@ -17,6 +17,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
@@ -71,6 +72,11 @@ const AuthenticatedNotificationsRoute =
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
@@ -164,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
@@ -188,6 +195,7 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/gigs/$gigId': typeof GigsGigIdRoute
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/notifications'
     | '/settings'
+    | '/support'
     | '/wallet'
     | '/auth/callback'
     | '/gigs/$gigId'
@@ -264,6 +274,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/notifications'
     | '/settings'
+    | '/support'
     | '/wallet'
     | '/auth/callback'
     | '/gigs/$gigId'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/_authenticated/notifications'
     | '/_authenticated/settings'
+    | '/_authenticated/support'
     | '/_authenticated/wallet'
     | '/auth/callback'
     | '/gigs/$gigId'
@@ -377,6 +389,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/wallet': {
@@ -505,6 +524,7 @@ const AuthenticatedOrdersOrderIdRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedCheckoutGigIdRoute: typeof AuthenticatedCheckoutGigIdRoute
   AuthenticatedGigsManageRoute: typeof AuthenticatedGigsManageRoute
@@ -518,6 +538,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedCheckoutGigIdRoute: AuthenticatedCheckoutGigIdRoute,
   AuthenticatedGigsManageRoute: AuthenticatedGigsManageRoute,
