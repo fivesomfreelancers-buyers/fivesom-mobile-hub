@@ -115,13 +115,9 @@ export function SideMenu() {
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
               >
-                <Icon
-                  className={`h-4.5 w-4.5 ${l.pink ? "text-accent-pink" : "text-muted-foreground"}`}
-                />
+                <Icon className="h-4.5 w-4.5 text-muted-foreground" />
                 {l.label}
-                {l.pink ? (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-accent-pink" />
-                ) : null}
+
               </Link>
             );
           })}
