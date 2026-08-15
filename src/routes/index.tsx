@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { AppHeader } from "@/components/app-header";
 import { GigCard } from "@/components/gig-card";
+import { HeroBannerSlider } from "@/components/hero-banner";
 import { MobileShell } from "@/components/mobile-shell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";

@@ -8,6 +8,7 @@ import {
   Home,
   LayoutGrid,
   ClipboardList,
+  Image as ImageIcon,
   LogOut,
   MessageSquare,
   Menu,
@@ -22,6 +23,7 @@ import { useState } from "react";
 
 import { Logo } from "@/components/logo";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useIsAdmin } from "@/hooks/use-admin";
 import { useRole } from "@/hooks/use-role";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,18 +65,25 @@ const COMMON_BOTTOM: MenuLink[] = [
   { to: "/legal/privacy", label: "Privacy Policy", icon: Shield },
 ];
 
+const ADMIN_LINKS: MenuLink[] = [
+  { to: "/admin/banners", label: "Home Banner Management", icon: ImageIcon },
+];
+
 export function SideMenu() {
   const [open, setOpen] = useState(false);
   const { user } = useSession();
   const { isFreelancer } = useRole();
+  const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const qc = useQueryClient();
 
   const links: MenuLink[] = [
     ...COMMON_TOP,
     ...(isFreelancer ? FREELANCER_LINKS : BUYER_LINKS),
+    ...(isAdmin ? ADMIN_LINKS : []),
     ...COMMON_BOTTOM,
   ];
+
 
   async function signOut() {
     setOpen(false);
