@@ -275,17 +275,37 @@ function SettingsPage() {
             <Row
               icon={ShieldCheck}
               title="Account Verification"
-              subtitle="Verify your identity"
+              subtitle={
+                freelancer.data?.is_verified
+                  ? "Your identity is verified"
+                  : "Contact support to verify your identity"
+              }
               trailing={freelancer.data?.is_verified ? "Verified" : "Not verified"}
+              onClick={() =>
+                freelancer.data?.is_verified
+                  ? toast.success("Your account is already verified")
+                  : navigate({ to: "/help", search: { section: "contact" } as never })
+              }
             />
             <Row
               icon={Wallet}
               title={isFreelancer ? "Earnings" : "Wallet"}
               subtitle="Balance and payouts"
               trailing={money(Number(wallet.data?.balance ?? 0))}
+              onClick={() => navigate({ to: "/wallet" })}
             />
-            <Row icon={CreditCard} title="Payment Methods" subtitle="Manage your payment methods" />
-            <Row icon={Bell} title="Notifications" subtitle="Manage notification preferences" />
+            <Row
+              icon={CreditCard}
+              title="Payment Methods"
+              subtitle="Manage your payment methods"
+              onClick={() => navigate({ to: "/wallet" })}
+            />
+            <Row
+              icon={Bell}
+              title="Notifications"
+              subtitle="Manage notification preferences"
+              onClick={() => navigate({ to: "/notifications" })}
+            />
           </div>
         )}
 
