@@ -16,7 +16,7 @@ export function AppHeader({ title }: { title?: string }) {
       <div className="flex items-center gap-2">
         <SideMenu />
         {title ? (
-          <span className="text-lg font-semibold">{title}</span>
+          <h1 className="text-lg font-semibold">{title}</h1>
         ) : (
           <Link to="/" className="flex items-center gap-2">
             <Logo className="h-8 w-8" />
