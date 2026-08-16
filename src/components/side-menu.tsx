@@ -10,7 +10,9 @@ import {
   ClipboardList,
   Image as ImageIcon,
   LogOut,
+  Megaphone,
   MessageSquare,
+
   Menu,
   Settings,
   Shield,
@@ -66,8 +68,11 @@ const COMMON_BOTTOM: MenuLink[] = [
 ];
 
 const ADMIN_LINKS: MenuLink[] = [
+  { to: "/admin", label: "Admin Dashboard", icon: Shield },
+  { to: "/admin/ads", label: "Ads & Promotions", icon: Megaphone },
   { to: "/admin/banners", label: "Home Banner Management", icon: ImageIcon },
 ];
+
 
 export function SideMenu() {
   const [open, setOpen] = useState(false);

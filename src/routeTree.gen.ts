@@ -27,6 +27,8 @@ import { Route as FreelancersFreelancerIdRouteImport } from './routes/freelancer
 import { Route as GigsGigIdRouteImport } from './routes/gigs.$gigId'
 import { Route as LegalPrivacyRouteImport } from './routes/legal/privacy'
 import { Route as LegalTermsRouteImport } from './routes/legal/terms'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminAdsRouteImport } from './routes/_authenticated/admin.ads'
 import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authenticated/admin.banners'
 import { Route as AuthenticatedCheckoutGigIdRouteImport } from './routes/_authenticated/checkout.$gigId'
 import { Route as AuthenticatedGigsManageRouteImport } from './routes/_authenticated/gigs.manage'
@@ -128,6 +130,16 @@ const LegalTermsRoute = LegalTermsRouteImport.update({
   path: '/legal/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminAdsRoute = AuthenticatedAdminAdsRouteImport.update({
+  id: '/admin/ads',
+  path: '/admin/ads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminBannersRoute =
   AuthenticatedAdminBannersRouteImport.update({
     id: '/admin/banners',
@@ -205,11 +217,13 @@ export interface FileRoutesByFullPath {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/auth/': typeof AuthIndexRoute
+  '/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
   '/gigs/manage': typeof AuthenticatedGigsManageRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRouteWithChildren
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/messages/': typeof AuthenticatedMessagesIndexRoute
   '/orders/': typeof AuthenticatedOrdersIndexRoute
   '/messages/system/$channelId': typeof AuthenticatedMessagesSystemChannelIdRoute
@@ -234,11 +248,13 @@ export interface FileRoutesByTo {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/auth': typeof AuthIndexRoute
+  '/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
   '/gigs/manage': typeof AuthenticatedGigsManageRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRouteWithChildren
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/messages': typeof AuthenticatedMessagesIndexRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
   '/messages/system/$channelId': typeof AuthenticatedMessagesSystemChannelIdRoute
@@ -265,11 +281,13 @@ export interface FileRoutesById {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/auth/': typeof AuthIndexRoute
+  '/_authenticated/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/_authenticated/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/_authenticated/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
   '/_authenticated/gigs/manage': typeof AuthenticatedGigsManageRoute
   '/_authenticated/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRouteWithChildren
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
   '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
   '/_authenticated/messages/system/$channelId': typeof AuthenticatedMessagesSystemChannelIdRoute
@@ -296,11 +314,13 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/auth/'
+    | '/admin/ads'
     | '/admin/banners'
     | '/checkout/$gigId'
     | '/gigs/manage'
     | '/messages/$conversationId'
     | '/orders/$orderId'
+    | '/admin/'
     | '/messages/'
     | '/orders/'
     | '/messages/system/$channelId'
@@ -325,11 +345,13 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/auth'
+    | '/admin/ads'
     | '/admin/banners'
     | '/checkout/$gigId'
     | '/gigs/manage'
     | '/messages/$conversationId'
     | '/orders/$orderId'
+    | '/admin'
     | '/messages'
     | '/orders'
     | '/messages/system/$channelId'
@@ -355,11 +377,13 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/auth/'
+    | '/_authenticated/admin/ads'
     | '/_authenticated/admin/banners'
     | '/_authenticated/checkout/$gigId'
     | '/_authenticated/gigs/manage'
     | '/_authenticated/messages/$conversationId'
     | '/_authenticated/orders/$orderId'
+    | '/_authenticated/admin/'
     | '/_authenticated/messages/'
     | '/_authenticated/orders/'
     | '/_authenticated/messages/system/$channelId'
@@ -512,6 +536,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalTermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/ads': {
+      id: '/_authenticated/admin/ads'
+      path: '/admin/ads'
+      fullPath: '/admin/ads'
+      preLoaderRoute: typeof AuthenticatedAdminAdsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/banners': {
       id: '/_authenticated/admin/banners'
       path: '/admin/banners'
@@ -606,11 +644,13 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
+  AuthenticatedAdminAdsRoute: typeof AuthenticatedAdminAdsRoute
   AuthenticatedAdminBannersRoute: typeof AuthenticatedAdminBannersRoute
   AuthenticatedCheckoutGigIdRoute: typeof AuthenticatedCheckoutGigIdRoute
   AuthenticatedGigsManageRoute: typeof AuthenticatedGigsManageRoute
   AuthenticatedMessagesConversationIdRoute: typeof AuthenticatedMessagesConversationIdRoute
   AuthenticatedOrdersOrderIdRoute: typeof AuthenticatedOrdersOrderIdRouteWithChildren
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedMessagesIndexRoute: typeof AuthenticatedMessagesIndexRoute
   AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
   AuthenticatedMessagesSystemChannelIdRoute: typeof AuthenticatedMessagesSystemChannelIdRoute
@@ -622,12 +662,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
+  AuthenticatedAdminAdsRoute: AuthenticatedAdminAdsRoute,
   AuthenticatedAdminBannersRoute: AuthenticatedAdminBannersRoute,
   AuthenticatedCheckoutGigIdRoute: AuthenticatedCheckoutGigIdRoute,
   AuthenticatedGigsManageRoute: AuthenticatedGigsManageRoute,
   AuthenticatedMessagesConversationIdRoute:
     AuthenticatedMessagesConversationIdRoute,
   AuthenticatedOrdersOrderIdRoute: AuthenticatedOrdersOrderIdRouteWithChildren,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedMessagesIndexRoute: AuthenticatedMessagesIndexRoute,
   AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,
   AuthenticatedMessagesSystemChannelIdRoute:
