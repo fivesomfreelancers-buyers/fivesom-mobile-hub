@@ -28,6 +28,7 @@ import { Route as GigsGigIdRouteImport } from './routes/gigs.$gigId'
 import { Route as LegalPrivacyRouteImport } from './routes/legal/privacy'
 import { Route as LegalTermsRouteImport } from './routes/legal/terms'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminAdsRouteImport } from './routes/_authenticated/admin.ads'
 import { Route as AuthenticatedAdminBannersRouteImport } from './routes/_authenticated/admin.banners'
 import { Route as AuthenticatedCheckoutGigIdRouteImport } from './routes/_authenticated/checkout.$gigId'
 import { Route as AuthenticatedGigsManageRouteImport } from './routes/_authenticated/gigs.manage'
@@ -134,6 +135,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminAdsRoute = AuthenticatedAdminAdsRouteImport.update({
+  id: '/admin/ads',
+  path: '/admin/ads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminBannersRoute =
   AuthenticatedAdminBannersRouteImport.update({
     id: '/admin/banners',
@@ -211,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/auth/': typeof AuthIndexRoute
+  '/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
   '/gigs/manage': typeof AuthenticatedGigsManageRoute
@@ -241,6 +248,7 @@ export interface FileRoutesByTo {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/auth': typeof AuthIndexRoute
+  '/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
   '/gigs/manage': typeof AuthenticatedGigsManageRoute
@@ -273,6 +281,7 @@ export interface FileRoutesById {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/terms': typeof LegalTermsRoute
   '/auth/': typeof AuthIndexRoute
+  '/_authenticated/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/_authenticated/admin/banners': typeof AuthenticatedAdminBannersRoute
   '/_authenticated/checkout/$gigId': typeof AuthenticatedCheckoutGigIdRoute
   '/_authenticated/gigs/manage': typeof AuthenticatedGigsManageRoute
@@ -305,6 +314,7 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/auth/'
+    | '/admin/ads'
     | '/admin/banners'
     | '/checkout/$gigId'
     | '/gigs/manage'
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/auth'
+    | '/admin/ads'
     | '/admin/banners'
     | '/checkout/$gigId'
     | '/gigs/manage'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/terms'
     | '/auth/'
+    | '/_authenticated/admin/ads'
     | '/_authenticated/admin/banners'
     | '/_authenticated/checkout/$gigId'
     | '/_authenticated/gigs/manage'
@@ -531,6 +543,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/ads': {
+      id: '/_authenticated/admin/ads'
+      path: '/admin/ads'
+      fullPath: '/admin/ads'
+      preLoaderRoute: typeof AuthenticatedAdminAdsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/banners': {
       id: '/_authenticated/admin/banners'
       path: '/admin/banners'
@@ -625,6 +644,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
+  AuthenticatedAdminAdsRoute: typeof AuthenticatedAdminAdsRoute
   AuthenticatedAdminBannersRoute: typeof AuthenticatedAdminBannersRoute
   AuthenticatedCheckoutGigIdRoute: typeof AuthenticatedCheckoutGigIdRoute
   AuthenticatedGigsManageRoute: typeof AuthenticatedGigsManageRoute
@@ -642,6 +662,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
+  AuthenticatedAdminAdsRoute: AuthenticatedAdminAdsRoute,
   AuthenticatedAdminBannersRoute: AuthenticatedAdminBannersRoute,
   AuthenticatedCheckoutGigIdRoute: AuthenticatedCheckoutGigIdRoute,
   AuthenticatedGigsManageRoute: AuthenticatedGigsManageRoute,
