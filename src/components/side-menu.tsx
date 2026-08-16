@@ -10,7 +10,9 @@ import {
   ClipboardList,
   Image as ImageIcon,
   LogOut,
+  Megaphone,
   MessageSquare,
+
   Menu,
   Settings,
   Shield,

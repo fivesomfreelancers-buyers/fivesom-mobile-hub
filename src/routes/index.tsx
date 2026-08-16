@@ -5,7 +5,9 @@ import { useState } from "react";
 
 import { AppHeader } from "@/components/app-header";
 import { GigCard } from "@/components/gig-card";
+import { AdSlot } from "@/components/ad-slot";
 import { HeroBannerSlider } from "@/components/hero-banner";
+
 import { MobileShell } from "@/components/mobile-shell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -91,6 +93,9 @@ function HomePage() {
 
 
         <HeroBannerSlider />
+
+        <AdSlot placement="home_top" />
+
 
         <section>
           <SectionTitle title="Popular Services" />
